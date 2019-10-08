@@ -159,13 +159,13 @@ NtlmPrintAvPairs(
         case MsvAvTimestamp:
             TRACE("MsvAvTimestamp");
             break;
-        case MsvAvRestrictions:
-            TRACE("MsAvRestrictions");
+        case MsvAvSingleHost:
+            TRACE("MsvAvSingleHost");
             break;
         case MsvAvTargetName:
             AV_DESC("MsvAvTargetName");
             break;
-        case MsvAvChannelBindings:
+        case MsvChannelBindings:
             TRACE("MsvChannelBindings");
             break;
         }

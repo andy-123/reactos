@@ -16,12 +16,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
+
+#define USE_SAMBA
+
 #include "ntlmssp.h"
 #include "protocol.h"
 #include "ciphers.h"
 
+#ifdef USE_SAMBA
+#include "smbincludes.h"
+#include "samba/source4/auth/auth.h"
+#include "samba/lib/param/loadparm.h"
+#endif
+
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
+
 
 /* Returns true if all Flags in <Flags> are supported!
  * RemoveUnsupportedFlags = TRUE will remove all unsupported
@@ -82,7 +92,7 @@ CliGenerateNegotiateMessage(
     OUT PSecBuffer OutputToken)
 {
     PNTLMSSP_CREDENTIAL cred = context->Credential;
-    PNEGOTIATE_MESSAGE message;
+    PNEGOTIATE_MESSAGE_X message;
     ULONG messageSize = 0;
     ULONG_PTR offset;
     PNTLMSSP_GLOBALS g = getGlobals();
@@ -100,7 +110,7 @@ CliGenerateNegotiateMessage(
         return SEC_E_INTERNAL_ERROR;
     }
 
-    messageSize = sizeof(NEGOTIATE_MESSAGE) +
+    messageSize = sizeof(NEGOTIATE_MESSAGE_X) +
                   g->NbMachineNameOEM.bUsed +
                   g->NbDomainNameOEM.bUsed;
 
@@ -124,7 +134,7 @@ CliGenerateNegotiateMessage(
     }
 
     /* use allocated memory */
-    message = (PNEGOTIATE_MESSAGE)OutputToken->pvBuffer;
+    message = (PNEGOTIATE_MESSAGE_X)OutputToken->pvBuffer;
     offset = (ULONG_PTR)(message+1);
 
     /* build message */
@@ -236,7 +246,7 @@ SvrGenerateChallengeMessage(
     OUT PSecBuffer OutputToken)
 {
     SECURITY_STATUS ret = SEC_E_OK;
-    PCHALLENGE_MESSAGE chaMessage = NULL;
+    PCHALLENGE_MESSAGE_X chaMessage = NULL;
     EXT_DATA avlTargetInfo;
     EXT_DATA TargetNameRef;
     ULONG messageSize, offset, chaMsgNegFlg;
@@ -340,7 +350,7 @@ SvrGenerateChallengeMessage(
     }
 
     /* compute message size */
-    messageSize = sizeof(CHALLENGE_MESSAGE) +
+    messageSize = sizeof(CHALLENGE_MESSAGE_X) +
                   avlTargetInfo.bUsed +
                   TargetNameRef.bUsed;
 
@@ -377,7 +387,7 @@ SvrGenerateChallengeMessage(
     }
 
     /* use allocated memory */
-    chaMessage = (PCHALLENGE_MESSAGE)OutputToken->pvBuffer;
+    chaMessage = (PCHALLENGE_MESSAGE_X)OutputToken->pvBuffer;
 
     /* build message
      * MS-NLMP 3.2.5.1.1 */
@@ -391,7 +401,7 @@ SvrGenerateChallengeMessage(
     memcpy(Context->ServerChallenge, chaMessage->ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
 
     /* point to the end of chaMessage */
-    offset = ((ULONG_PTR)chaMessage) + sizeof(CHALLENGE_MESSAGE);
+    offset = ((ULONG_PTR)chaMessage) + sizeof(CHALLENGE_MESSAGE_X);
 
     /* set target information */
     ERR("set target information chaMessage %p to len %d, offset %x\n",
@@ -427,9 +437,133 @@ SvrHandleNegotiateMessage(
     OUT PSecBuffer OutputToken2,
     OUT PULONG pASCContextAttr,
     OUT PTimeStamp ptsExpiry)
+#ifdef USE_SAMBA
+{
+    SECURITY_STATUS ret;
+
+    struct gensec_security *gs;
+    struct gensec_settings *settings;
+    //struct gensec_ntlmssp_context *gsctx;
+    struct tevent_context *evctx;
+    struct auth4_context* authctx;
+    TALLOC_CTX *ctx = NULL;
+
+    DATA_BLOB dataIn;
+    DATA_BLOB dataOut;
+    NTSTATUS st;
+
+    PNTLMSSP_CONTEXT_SVR context = NULL;
+    if (*phContext == 0)
+    {
+        if(!(context = NtlmAllocateContextSvr()))
+        {
+            ret = SEC_E_INSUFFICIENT_MEMORY;
+            ERR("SEC_E_INSUFFICIENT_MEMORY!\n");
+            goto done;
+        }
+
+        *phContext = (ULONG_PTR)context;
+
+        TRACE("NtlmHandleNegotiateMessage NEW hContext %lx\n", *phContext);
+    }
+
+    context = NtlmReferenceContextSvr(*phContext);
+
+    settings = talloc_zero(NULL, struct gensec_settings);
+
+    settings->lp_ctx = talloc_zero(NULL, struct loadparm_context);
+	settings->target_hostname = "targethost";
+    settings->backends = NULL;
+	settings->server_dns_domain = NULL;
+	settings->server_dns_name = NULL;
+	settings->server_netbios_domain = NULL;
+	settings->server_netbios_name = NULL;
+
+    evctx = tevent_context_init(ctx);
+    st = auth_context_create(ctx, evctx, NULL, NULL,
+                             &authctx);
+    if (!NT_STATUS_IS_OK(st))
+    {
+        ERR("auth_context_create_methods failed\n");
+        ret = SEC_E_INTERNAL_ERROR;
+        goto done;
+    }
+    st = gensec_server_start(NULL, settings, authctx, &gs);
+    if (!NT_STATUS_IS_OK(st))
+    {
+        ERR("gensec_server_start faield\n");
+        ret = SEC_E_INTERNAL_ERROR;
+        goto done;
+    }
+    /* todo -> move to dll init */
+    st = gensec_ntlmssp_server_start(gs);
+    if (!NT_STATUS_IS_OK(st))
+    {
+        ERR("gensec_ntlmssp_server_start faield\n");
+        ret = SEC_E_INTERNAL_ERROR;
+        goto done;
+    }
+
+    context->samba_gs = gs;
+
+    dataIn.data = InputToken->pvBuffer;
+    dataIn.length = InputToken->cbBuffer;
+
+    //gs.auth_context.challenge.setby = "hack";
+    //gs.auth_context.challenge.data = NULL;
+    //--gs.auth_context = malloc(sizeof(struct auth4_context));
+    //--gs.auth_context->get_ntlm_challenge = NULL;
+
+    //gsctx = talloc_zero(NULL, struct gensec_ntlmssp_context);
+    //gs->private_data = gsctx;
+    //gsctx->ntlmssp_state = talloc_zero(NULL, struct ntlmssp_state);
+
+    st = gensec_ntlmssp_server_negotiate(gs, ctx, dataIn, &dataOut);
+    if ((st == NT_STATUS_OK) ||
+        (st == NT_STATUS_MORE_PROCESSING_REQUIRED))
+    {
+        st = NT_STATUS_OK;
+        ret = SEC_E_OK;
+    }
+    if (!NT_STATUS_IS_OK(st))
+    {
+        ERR("gensec_ntlmssp_server_negotiate faield %x\n", st);
+        ret = SEC_E_INTERNAL_ERROR; //TODO be more specific
+        goto done;
+    }
+
+    if (ASCContextReq & ASC_REQ_ALLOCATE_MEMORY)
+    {
+        OutputToken->cbBuffer = dataOut.length;
+        OutputToken->pvBuffer = NtlmAllocate(dataOut.length);
+    }
+    else if (OutputToken->cbBuffer < dataOut.length)
+    {
+        ERR("buffer to small\n");
+        ret = SEC_E_BUFFER_TOO_SMALL;
+        goto done;
+    }
+    memcpy(OutputToken->pvBuffer, dataOut.data, dataOut.length);
+
+    talloc_free(dataOut.data);
+
+    //smb_iconv_open_ex(NULL, NULL, NULL, TRUE);
+    //convert_string_talloc(NULL, 0,0,NULL,0,NULL,NULL);
+
+    //talloc_free(gsctx);
+    talloc_free(&settings->lp_ctx);
+    talloc_free(settings);
+
+done:
+    if (context)
+        NtlmDereferenceContext((ULONG_PTR)context);
+    return ret;
+}
+
+#else
 {
     SECURITY_STATUS ret = SEC_E_OK;
-    PNEGOTIATE_MESSAGE negoMessage = NULL;
+    PNEGOTIATE_MESSAGE_X negoMessage = NULL;
     PNTLMSSP_CREDENTIAL cred = NULL;
     PNTLMSSP_CONTEXT_SVR context = NULL;
     EXT_STRING_A OemDomainName, OemWorkstationName;
@@ -456,7 +590,7 @@ SvrHandleNegotiateMessage(
 
     /* InputToken should contain a negotiate message */
     if(InputToken->cbBuffer > NTLM_MAX_BUF ||
-        InputToken->cbBuffer < sizeof(NEGOTIATE_MESSAGE))
+        InputToken->cbBuffer < sizeof(NEGOTIATE_MESSAGE_X))
     {
         ERR("Input wrong size!!\n");
         ret = SEC_E_INVALID_TOKEN;
@@ -464,14 +598,14 @@ SvrHandleNegotiateMessage(
     }
 
     /* allocate a buffer for it */
-    if(!(negoMessage = NtlmAllocate(sizeof(NEGOTIATE_MESSAGE))))
+    if(!(negoMessage = NtlmAllocate(sizeof(NEGOTIATE_MESSAGE_X))))
     {
         ret = SEC_E_INSUFFICIENT_MEMORY;
         goto exit;
     }
 
     /* copy it */
-    memcpy(negoMessage, InputToken->pvBuffer, sizeof(NEGOTIATE_MESSAGE));
+    memcpy(negoMessage, InputToken->pvBuffer, sizeof(NEGOTIATE_MESSAGE_X));
 
     /* validate it */
     if ((memcmp(negoMessage->Signature, NTLMSSP_SIGNATURE, 8) != 0) ||
@@ -655,6 +789,7 @@ exit:
 
     return ret;
 }
+#endif
 
 SECURITY_STATUS
 CliGenerateAuthenticationMessage(
@@ -669,7 +804,7 @@ CliGenerateAuthenticationMessage(
 {
     SECURITY_STATUS ret = SEC_E_OK;
     PNTLMSSP_CONTEXT_CLI context = NULL;
-    PCHALLENGE_MESSAGE challenge = NULL;
+    PCHALLENGE_MESSAGE_X challenge = NULL;
     PNTLMSSP_CREDENTIAL cred = NULL;
     BOOL isUnicode;
     BOOL Anonymouse;
@@ -731,14 +866,14 @@ CliGenerateAuthenticationMessage(
 
     /* InputToken1 should contain a challenge message */
     if(InputToken1->cbBuffer > NTLM_MAX_BUF ||
-        InputToken1->cbBuffer < sizeof(CHALLENGE_MESSAGE))
+        InputToken1->cbBuffer < sizeof(CHALLENGE_MESSAGE_X))
     {
         ERR("Input token invalid!\n");
         ret = SEC_E_INVALID_TOKEN;
         goto quit;
     }
 
-    challenge = (PCHALLENGE_MESSAGE)InputToken1->pvBuffer;
+    challenge = (PCHALLENGE_MESSAGE_X)InputToken1->pvBuffer;
 
     /* validate it */
     if ((memcmp(challenge->Signature, NTLMSSP_SIGNATURE, 8) != 0) ||
@@ -1620,6 +1755,14 @@ SvrHandleAuthenticateMessage(
     OUT PUCHAR pSessionKey,
     OUT PULONG pfUserFlags)
 {
+#ifdef USE_SAMBA
+    SECURITY_STATUS ret = SEC_E_OK;
+
+    goto done;
+
+done:
+    return ret;
+#else
     SECURITY_STATUS ret = SEC_E_OK;
     PNTLMSSP_CONTEXT_SVR context = NULL;
     AUTH_DATA ad = {0};
@@ -1706,5 +1849,6 @@ quit:
     ExtStrFree(&ad.Workstation);
     ExtStrFree(&ad.DomainName);
     return ret;
+#endif
 }
 

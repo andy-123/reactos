@@ -20,6 +20,15 @@
 /* see "NT LAN Manager (NTLM) Authentication Protocol Specification"
 * [MS-NLMP]  v20110504 for more details */
 
+#ifndef _PROTOCOL_H_
+#define _PROTOCOL_H_
+
+#include "stdint.h"
+
+/* use samba ntlmssp_AvID */
+//#include "samba/librpc/gen_ndr/ntlmssp.h"
+//#define MSV1_0_AVID enum ntlmssp_AvId
+
 /* signature */
 #define NTLMSSP_SIGNATURE "NTLMSSP\0"
 
@@ -28,7 +37,6 @@
 #define NtlmChallenge 0x00000002
 #define NtlmAuthenticate 0x00000003
 
-/* flags */
 #define NTLMSSP_NEGOTIATE_UNICODE                     0x00000001
 #define NTLMSSP_NEGOTIATE_OEM                         0x00000002
 #define NTLMSSP_REQUEST_TARGET                        0x00000004
@@ -49,6 +57,8 @@
 #define NTLMSSP_TARGET_TYPE_SERVER                    0x00020000
 #define NTLMSSP_TARGET_TYPE_SHARE                     0x00040000
 #define NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY    0x00080000
+/* not defined in samba */
+/*NTLMSSP_REQUEST_INIT_RESP = NTLMSSP_NEGOTIATE_IDENTIFY ??? */
 #define NTLMSSP_REQUEST_INIT_RESP                     0x00100000
 #define NTLMSSP_REQUEST_ACCEPT_RESP                   0x00200000 //get session key and luid
 #define NTLMSSP_REQUEST_NON_NT_SESSION_KEY            0x00400000
@@ -62,7 +72,10 @@
 #define NTLMSSP_NEGOTIATE_KEY_EXCH                    0x40000000
 #define NTLMSSP_NEGOTIATE_56                          0x80000000
 
-#define NTLMSSP_REVISION_W2K3 0x0F
+/* different name in samba */
+#define NTLMSSP_NEGOTIATE_NTLM2 NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY
+
+//#define NTLMSSP_REVISION_W2K3 0x0F
 
 /* basic types */
 typedef char const* PCCHAR;
@@ -125,7 +138,8 @@ typedef struct _NTLM_BLOB
     ULONG Offset;
 }NTLM_BLOB, *PNTLM_BLOB;
 
-typedef struct _NEGOTIATE_MESSAGE
+//TODO REMOVE//
+typedef struct _NEGOTIATE_MESSAGE_X
 {
     CHAR Signature[8];
     ULONG MsgType;
@@ -134,9 +148,10 @@ typedef struct _NEGOTIATE_MESSAGE
     NTLM_BLOB OemWorkstationName;
     NTLM_WINDOWS_VERSION Version;
     /* payload (DomainName, WorkstationName)*/
-}NEGOTIATE_MESSAGE, *PNEGOTIATE_MESSAGE;
+} NEGOTIATE_MESSAGE_X, *PNEGOTIATE_MESSAGE_X;
 
-typedef struct _CHALLENGE_MESSAGE
+//TODO REMOVE//
+typedef struct _CHALLENGE_MESSAGE_X
 {
     CHAR Signature[8];
     ULONG MsgType;
@@ -147,7 +162,7 @@ typedef struct _CHALLENGE_MESSAGE
     NTLM_BLOB TargetInfo; //only if NTLMSSP_REQUEST_TARGET, contains AV_PAIRs
     NTLM_WINDOWS_VERSION Version;
     /* payload (TargetName, TargetInfo)*/
-}CHALLENGE_MESSAGE, *PCHALLENGE_MESSAGE;
+}CHALLENGE_MESSAGE_X, *PCHALLENGE_MESSAGE_X;
 
 
 typedef struct _AUTHENTICATE_MESSAGE
@@ -493,3 +508,4 @@ RC4(IN prc4_key pHandle,
     OUT UCHAR* pDataO,
     IN ULONG len);
 
+#endif

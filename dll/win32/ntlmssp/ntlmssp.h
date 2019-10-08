@@ -42,6 +42,8 @@
 
 #include "wine/unicode.h"
 
+//#include "samba/librpc/gen_ndr/ntlmssp.h"
+
 /* globals */
 extern SECPKG_FUNCTION_TABLE NtLmPkgFuncTable; //functions we provide to LSA in SpLsaModeInitialize
 extern PSECPKG_DLL_FUNCTIONS NtlmPkgDllFuncTable; //fuctions provided by LSA in SpInstanceInit
@@ -287,6 +289,9 @@ typedef struct _NTLMSSP_CONTEXT_SVR
     /* generated in GenerateChallenge, needed when
      * AUTHENTICATE_MESSAGE is processed */
     UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH];
+
+    /* samba gs */
+    void* samba_gs;
 
 } NTLMSSP_CONTEXT_SVR, *PNTLMSSP_CONTEXT_SVR;
 
