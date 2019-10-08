@@ -73,7 +73,7 @@
 #include <shellapi.h>
 #include <winperf.h>
 #ifndef NOCRYPT
-#include <wincrypt.h>
+//#include <wincrypt.h>
 #include <winefs.h>
 #include <winscard.h>
 #endif

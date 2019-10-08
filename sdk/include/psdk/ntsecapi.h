@@ -211,7 +211,7 @@ typedef enum _MSV1_0_PROFILE_BUFFER_TYPE {
   MsV1_0Lm20LogonProfile,
   MsV1_0SmartCardProfile
 } MSV1_0_PROFILE_BUFFER_TYPE, *PMSV1_0_PROFILE_BUFFER_TYPE;
-typedef enum {
+enum ntlmssp_AvId {
   MsvAvEOL,
   MsvAvNbComputerName,
   MsvAvNbDomainName,
@@ -220,10 +220,11 @@ typedef enum {
   MsvAvDnsTreeName,
   MsvAvFlags,
   MsvAvTimestamp,
-  MsvAvRestrictions,
+  MsvAvSingleHost,
   MsvAvTargetName,
-  MsvAvChannelBindings
-} MSV1_0_AVID;
+  MsvChannelBindings
+};
+typedef enum ntlmssp_AvId MSV1_0_AVID;
 typedef enum _MSV1_0_PROTOCOL_MESSAGE_TYPE {
   MsV1_0Lm20ChallengeRequest = 0,
   MsV1_0Lm20GetChallengeResponse,
