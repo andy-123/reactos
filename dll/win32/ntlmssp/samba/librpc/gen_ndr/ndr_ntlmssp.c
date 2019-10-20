@@ -1356,6 +1356,7 @@ static enum ndr_err_code ndr_push_ntlmssp_LM_RESPONSE_with_len(struct ndr_push *
 	}
 	return NDR_ERR_SUCCESS;
 }
+#endif
 
 static enum ndr_err_code ndr_pull_ntlmssp_LM_RESPONSE_with_len(struct ndr_pull *ndr, int ndr_flags, union ntlmssp_LM_RESPONSE_with_len *r)
 {
@@ -1378,6 +1379,7 @@ static enum ndr_err_code ndr_pull_ntlmssp_LM_RESPONSE_with_len(struct ndr_pull *
 	return NDR_ERR_SUCCESS;
 }
 
+#ifndef __REACTOS__
 _PUBLIC_ void ndr_print_ntlmssp_LM_RESPONSE_with_len(struct ndr_print *ndr, const char *name, const union ntlmssp_LM_RESPONSE_with_len *r)
 {
 	uint32_t level;
@@ -1654,6 +1656,7 @@ _PUBLIC_ enum ndr_err_code ndr_push_ntlmssp_NTLM_RESPONSE_with_len(struct ndr_pu
 	}
 	return NDR_ERR_SUCCESS;
 }
+#endif
 
 _PUBLIC_ enum ndr_err_code ndr_pull_ntlmssp_NTLM_RESPONSE_with_len(struct ndr_pull *ndr, int ndr_flags, union ntlmssp_NTLM_RESPONSE_with_len *r)
 {
@@ -1695,6 +1698,7 @@ _PUBLIC_ enum ndr_err_code ndr_pull_ntlmssp_NTLM_RESPONSE_with_len(struct ndr_pu
 	return NDR_ERR_SUCCESS;
 }
 
+#ifndef __REACTOS__
 _PUBLIC_ void ndr_print_ntlmssp_NTLM_RESPONSE_with_len(struct ndr_print *ndr, const char *name, const union ntlmssp_NTLM_RESPONSE_with_len *r)
 {
 	uint32_t level;
@@ -1847,6 +1851,7 @@ _PUBLIC_ enum ndr_err_code ndr_push_AUTHENTICATE_MESSAGE(struct ndr_push *ndr, i
 	}
 	return NDR_ERR_SUCCESS;
 }
+#endif
 
 _PUBLIC_ enum ndr_err_code ndr_pull_AUTHENTICATE_MESSAGE(struct ndr_pull *ndr, int ndr_flags, struct AUTHENTICATE_MESSAGE *r)
 {
@@ -2079,6 +2084,7 @@ _PUBLIC_ enum ndr_err_code ndr_pull_AUTHENTICATE_MESSAGE(struct ndr_pull *ndr, i
 	return NDR_ERR_SUCCESS;
 }
 
+#ifndef __REACTOS__
 _PUBLIC_ void ndr_print_AUTHENTICATE_MESSAGE(struct ndr_print *ndr, const char *name, const struct AUTHENTICATE_MESSAGE *r)
 {
 	ndr_print_struct(ndr, name, "AUTHENTICATE_MESSAGE");

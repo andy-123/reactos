@@ -27,6 +27,7 @@
 #include "smbincludes.h"
 #include "samba/source4/auth/auth.h"
 #include "samba/lib/param/loadparm.h"
+#include "samba/lib/tevent/tevent_internal.h"
 #endif
 
 #include "wine/debug.h"
@@ -519,18 +520,15 @@ SvrHandleNegotiateMessage(
     //gsctx->ntlmssp_state = talloc_zero(NULL, struct ntlmssp_state);
 
     st = gensec_ntlmssp_server_negotiate(gs, ctx, dataIn, &dataOut);
-    if ((st == NT_STATUS_OK) ||
-        (st == NT_STATUS_MORE_PROCESSING_REQUIRED))
-    {
-        st = NT_STATUS_OK;
-        ret = SEC_E_OK;
-    }
-    if (!NT_STATUS_IS_OK(st))
+    /* NT_STATUS_MORE_PROCESSING_REQUIRED is what we expect */
+    if ((st != NT_STATUS_OK) &&
+        (st != NT_STATUS_MORE_PROCESSING_REQUIRED))
     {
         ERR("gensec_ntlmssp_server_negotiate faield %x\n", st);
         ret = SEC_E_INTERNAL_ERROR; //TODO be more specific
         goto done;
     }
+    ret = SEC_I_CONTINUE_NEEDED;
 
     if (ASCContextReq & ASC_REQ_ALLOCATE_MEMORY)
     {
@@ -821,7 +819,7 @@ CliGenerateAuthenticationMessage(
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
     PNTLMSSP_GLOBALS_CLI gcli = getGlobalsCli();
 
-    PAUTHENTICATE_MESSAGE authmessage = NULL;
+    PAUTHENTICATE_MESSAGE_X authmessage = NULL;
     ULONG_PTR offset;
     ULONG messageSize, NegFlg;
     BOOL sendLmChallengeResponse;
@@ -1154,7 +1152,7 @@ CliGenerateAuthenticationMessage(
     NtlmPrintHexDump(NtResponseData.Buffer, NtResponseData.bUsed);
 
     /* calc message size */
-    messageSize = sizeof(AUTHENTICATE_MESSAGE) +
+    messageSize = sizeof(AUTHENTICATE_MESSAGE_X) +
                   cred->DomainNameW.bUsed +
                   cred->UserNameW.bUsed +
                   WorkstationName.bUsed +
@@ -1164,8 +1162,8 @@ CliGenerateAuthenticationMessage(
     if (sendLmChallengeResponse)
         messageSize += LmResponseData.bUsed;
     if (!sendMIC)
-        messageSize -= sizeof(AUTHENTICATE_MESSAGE) -
-                       FIELD_OFFSET(AUTHENTICATE_MESSAGE, MIC);
+        messageSize -= sizeof(AUTHENTICATE_MESSAGE_X) -
+                       FIELD_OFFSET(AUTHENTICATE_MESSAGE_X, MIC);
     /* if should not allocate */
     if (!(ISCContextReq & ISC_REQ_ALLOCATE_MEMORY))
     {
@@ -1186,7 +1184,7 @@ CliGenerateAuthenticationMessage(
             goto quit;
         }
     }
-    authmessage = (PAUTHENTICATE_MESSAGE)OutputToken1->pvBuffer;
+    authmessage = (PAUTHENTICATE_MESSAGE_X)OutputToken1->pvBuffer;
 
     /* fill auth message */
     strncpy(authmessage->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
@@ -1196,8 +1194,8 @@ CliGenerateAuthenticationMessage(
     /* calc blob offset */
     offset = (ULONG_PTR)(authmessage+1);
     if (!sendMIC)
-        offset -= sizeof(AUTHENTICATE_MESSAGE) -
-                  FIELD_OFFSET(AUTHENTICATE_MESSAGE, MIC);
+        offset -= sizeof(AUTHENTICATE_MESSAGE_X) -
+                  FIELD_OFFSET(AUTHENTICATE_MESSAGE_X, MIC);
 
     NtlmExtStringToBlob((PVOID)authmessage,
                         &cred->DomainNameW,
@@ -1275,7 +1273,7 @@ quit:
 typedef struct _AUTH_DATA
 {
     PSecBuffer InputToken;
-    PAUTHENTICATE_MESSAGE authMessage;
+    PAUTHENTICATE_MESSAGE_X authMessage;
     EXT_DATA EncryptedRandomSessionKey;
     EXT_DATA LmChallengeResponse;
     EXT_DATA NtChallengeResponse;
@@ -1757,10 +1755,77 @@ SvrHandleAuthenticateMessage(
 {
 #ifdef USE_SAMBA
     SECURITY_STATUS ret = SEC_E_OK;
+    PNTLMSSP_CONTEXT_SVR context = NULL;
+    NTSTATUS st, reqst;
+    struct tevent_req *evReq;
+
+    DATA_BLOB dataIn;
+    DATA_BLOB dataOut;
+
+    struct gensec_security *gs;
+    struct tevent_context *ev;
+    if(!(context = NtlmReferenceContextSvr(hContext)))
+    {
+        ret = SEC_E_INVALID_HANDLE;
+        goto done;
+    }
+    gs = context->samba_gs;
+    ev = gs->auth_context->event_ctx;
+
+    dataIn.data = InputToken->pvBuffer;
+    dataIn.length = InputToken->cbBuffer;
+
+    evReq = ntlmssp_server_auth_send(NULL, ev, gs, dataIn);
+    if (evReq == NULL)
+    {
+        ERR("ntlmssp_server_auth_send failed\n");
+        ret = SEC_E_INTERNAL_ERROR;
+        goto done;
+    }
+
+    /* hacky but ... ok for now */
+    st = _tevent_loop_wait(ev, "here!");
+    printf("tevent loop %lx\n", st);
+
+    st = ntlmssp_server_auth_recv(evReq, &reqst, &dataOut);
+    if (!NT_STATUS_IS_OK(st))
+    {
+        ERR("ntlmssp_server_auth_recv failed\n");
+        ret = SEC_E_INTERNAL_ERROR;
+        goto done;
+    }
+
+    if (!NT_STATUS_IS_OK(reqst))
+    {
+        ERR("ntlmssp_server_auth_recv failed\n");
+        ERR("TODO status -> nt error\n");
+        ret =  reqst;//TODO ntstatus -> sec status
+        goto done;
+    }
+
+    /* succes ... return data in dataOut */
+    if (dataOut.length > 0)
+    {
+        if (ASCContextReq & ASC_REQ_ALLOCATE_MEMORY)
+        {
+            OutputToken->cbBuffer = dataOut.length;
+            OutputToken->pvBuffer = NtlmAllocate(dataOut.length);
+        }
+        else if (OutputToken->cbBuffer < dataOut.length)
+        {
+            ERR("buffer to small\n");
+            ret = SEC_E_BUFFER_TOO_SMALL;
+            goto done;
+        }
+        memcpy(OutputToken->pvBuffer, dataOut.data, dataOut.length);
+    }
+    OutputToken->cbBuffer = dataOut.length;
 
     goto done;
 
 done:
+    if (dataOut.length > 0)
+        talloc_free(dataOut.data);
     return ret;
 #else
     SECURITY_STATUS ret = SEC_E_OK;

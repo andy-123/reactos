@@ -22,8 +22,13 @@
 
 #ifndef __REACTOS__
 #include "../lib/crypto/arcfour.h"
+#else
+#include "samba/lib/crypto/arcfour.h"
+#endif
 
+#ifndef __REACTOS__
 struct auth_session_info;
+#endif
 
 struct ntlmssp_crypt_direction {
 	uint32_t seq_num;
@@ -41,7 +46,6 @@ union ntlmssp_crypt_state {
 		struct ntlmssp_crypt_direction receiving;
 	} ntlm2;
 };
-#endif
 
 struct gensec_ntlmssp_context {
 	/* For GENSEC users */
@@ -123,7 +127,6 @@ NTSTATUS gensec_ntlmssp_server_negotiate(struct gensec_security *gensec_security
 					 TALLOC_CTX *out_mem_ctx,
 					 const DATA_BLOB request, DATA_BLOB *reply);
 
-#ifndef __REACTOS__
 struct tevent_req *ntlmssp_server_auth_send(TALLOC_CTX *mem_ctx,
 					    struct tevent_context *ev,
 					    struct gensec_security *gensec_security,
@@ -131,7 +134,6 @@ struct tevent_req *ntlmssp_server_auth_send(TALLOC_CTX *mem_ctx,
 NTSTATUS ntlmssp_server_auth_recv(struct tevent_req *req,
 				  TALLOC_CTX *out_mem_ctx,
 				  DATA_BLOB *out);
-#endif
 
 
 /**
@@ -191,8 +193,10 @@ NTSTATUS gensec_ntlmssp_unwrap(struct gensec_security *gensec_security,
  */
 NTSTATUS gensec_ntlmssp_magic(struct gensec_security *gensec_security,
 			      const DATA_BLOB *first_packet);
+#endif
 bool gensec_ntlmssp_have_feature(struct gensec_security *gensec_security,
 				 uint32_t feature);
+#ifndef __REACTOS__
 NTSTATUS gensec_ntlmssp_session_key(struct gensec_security *gensec_security,
 				    TALLOC_CTX *mem_ctx,
 				    DATA_BLOB *session_key);

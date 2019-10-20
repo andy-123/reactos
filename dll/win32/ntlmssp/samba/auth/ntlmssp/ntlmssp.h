@@ -19,6 +19,8 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef _SAMBA_NTLMSSP_H_
+#define _SAMBA_NTLMSSP_H_
 
 #ifndef __REACTOS__
 #include "../librpc/gen_ndr/ntlmssp.h"
@@ -81,13 +83,11 @@ struct ntlmssp_state
 	bool new_spnego;
 	bool force_old_spnego;
 
-#ifndef __REACTOS__
 	struct {
 		const char *netbios_name;
 		const char *netbios_domain;
 		struct AV_PAIR_LIST av_pair_list;
 	} client;
-#endif
 
 	struct {
 		bool is_standalone;
@@ -155,3 +155,5 @@ NTSTATUS gensec_ntlmssp_init(TALLOC_CTX *ctx);
 
 uint32_t gensec_ntlmssp_neg_flags(struct gensec_security *gensec_security);
 const char *gensec_ntlmssp_server_domain(struct gensec_security *gensec_security);
+
+#endif // _SAMBA_NTLMSSP_H_

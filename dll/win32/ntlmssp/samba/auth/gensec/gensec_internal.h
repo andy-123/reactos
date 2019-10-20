@@ -25,8 +25,8 @@
 
 struct gensec_security;
 
-#ifndef __REACTOS__
 struct gensec_security_ops {
+#ifndef __REACTOS__
 	const char *name;
 	const char *sasl_name;
 	uint8_t auth_type;  /* 0 if not offered on DCE-RPC */
@@ -47,10 +47,12 @@ struct gensec_security_ops {
 				DATA_BLOB *out);
 	NTSTATUS (*may_reset_crypto)(struct gensec_security *gensec_security,
 				     bool full_reset);
+#endif
 	NTSTATUS (*seal_packet)(struct gensec_security *gensec_security, TALLOC_CTX *sig_mem_ctx,
 				uint8_t *data, size_t length,
 				const uint8_t *whole_pdu, size_t pdu_length,
 				DATA_BLOB *sig);
+#ifndef __REACTOS__
 	NTSTATUS (*sign_packet)(struct gensec_security *gensec_security, TALLOC_CTX *sig_mem_ctx,
 				const uint8_t *data, size_t length,
 				const uint8_t *whole_pdu, size_t pdu_length,
@@ -88,8 +90,10 @@ struct gensec_security_ops {
 	bool kerberos;
 	enum gensec_priority priority;
 	bool glue;
+#endif
 };
 
+#ifndef __REACTOS__
 struct gensec_security_ops_wrapper {
 	const struct gensec_security_ops *op;
 	const char *oid;
@@ -106,8 +110,8 @@ struct gensec_security {
 	enum gensec_role gensec_role;
 #ifndef __REACTOS__
 	bool subcontext;
-	uint32_t want_features;
 #endif
+	uint32_t want_features;
 	uint32_t max_update_size;
 	uint8_t dcerpc_auth_level;
 	struct tsocket_address *local_addr, *remote_addr;

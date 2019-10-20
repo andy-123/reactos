@@ -28,6 +28,8 @@
 #include <stdarg.h>
 #ifndef __REACTOS__
 #include "attr.h"
+#else
+#include "samba/lib/talloc/talloc.h"
 #endif
 
 
@@ -111,7 +113,7 @@ bool dbghdr( int level, const char *location, const char *func);
 #define debuglevel_get() debuglevel_get_class(DBGC_ALL)
 #define debuglevel_set(lvl) debuglevel_set_class(DBGC_ALL, (lvl))
 #else
-#define DEBUGLEVEL 10
+#define DEBUGLEVEL 11
 #endif
 
 /* Debugging macros

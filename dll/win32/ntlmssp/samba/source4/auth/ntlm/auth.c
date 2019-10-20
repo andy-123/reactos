@@ -37,8 +37,10 @@
 #else
 #include "../../../../smbincludes.h"
 #include "../../auth/auth.h"
+#include "samba/librpc/gen_ndr/auth.h"
 #include "../../../lib/util/dlinklist.h"
 #include "samba/lib/util/genrand.h"
+#include "samba/lib/util/tevent_ntstatus.h"
 #endif
 
 #ifndef __REACTOS__
@@ -53,6 +55,7 @@ static NTSTATUS auth_generate_session_info_wrapper(struct auth4_context *auth_co
 						   const char *original_user_name,
 						   uint32_t session_info_flags,
 						   struct auth_session_info **session_info);
+#endif
 
 /***************************************************************************
  Set a fixed challenge
@@ -67,7 +70,6 @@ _PUBLIC_ NTSTATUS auth_context_set_challenge(struct auth4_context *auth_ctx, con
 
 	return NT_STATUS_OK;
 }
-#endif
 
 /****************************************************************************
  Try to get a challenge out of the various authentication modules.
@@ -200,6 +202,7 @@ _PUBLIC_ NTSTATUS auth_check_password(struct auth4_context *auth_ctx,
 
 	return status;
 }
+#endif
 
 struct auth_check_password_state {
 	struct tevent_context *ev;
@@ -381,7 +384,6 @@ static void auth_check_password_next(struct tevent_req *req)
 					req);
 		return;
 	}
-
 	if (state->method->ops->check_password == NULL) {
 		tevent_req_nterror(req, NT_STATUS_INTERNAL_ERROR);
 		return;
@@ -616,6 +618,7 @@ static NTSTATUS auth_check_password_wrapper_recv(struct tevent_req *req,
 	return NT_STATUS_OK;
 }
 
+#ifndef __REACTOS__
  /* Wrapper because we don't want to expose all callers to needing to
   * know that session_info is generated from the main ldb, and because
   * we need to break a depenency loop between the DCE/RPC layer and the
@@ -761,13 +764,11 @@ _PUBLIC_ NTSTATUS auth_context_create_methods(TALLOC_CTX *mem_ctx, const char * 
 		DLIST_ADD_END(ctx->methods, method);
 	}
 
-#ifndef __REACTOS__
 	ctx->check_ntlm_password_send = auth_check_password_wrapper_send;
 	ctx->check_ntlm_password_recv = auth_check_password_wrapper_recv;
-#endif
 	ctx->get_ntlm_challenge = auth_get_challenge;
-#ifndef __REACTOS__
 	ctx->set_ntlm_challenge = auth_context_set_challenge;
+#ifndef __REACTOS__
 	ctx->generate_session_info = auth_generate_session_info_wrapper;
 	ctx->generate_session_info_pac = auth_generate_session_info_pac;
 #else

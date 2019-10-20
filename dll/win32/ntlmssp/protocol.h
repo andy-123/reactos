@@ -165,7 +165,7 @@ typedef struct _CHALLENGE_MESSAGE_X
 }CHALLENGE_MESSAGE_X, *PCHALLENGE_MESSAGE_X;
 
 
-typedef struct _AUTHENTICATE_MESSAGE
+typedef struct _AUTHENTICATE_MESSAGE_X
 {
     CHAR Signature[8];
     ULONG MsgType;
@@ -179,7 +179,7 @@ typedef struct _AUTHENTICATE_MESSAGE
     NTLM_WINDOWS_VERSION Version;
     BYTE MIC[16]; //doc says its ommited in nt,2k,xp,2k3
                   /* payload */
-}AUTHENTICATE_MESSAGE, *PAUTHENTICATE_MESSAGE;
+}AUTHENTICATE_MESSAGE_X, *PAUTHENTICATE_MESSAGE_X;
 
 /* MS-NTLM 2.2.2.9.1 + 2 */
 #include "pshpack1.h"

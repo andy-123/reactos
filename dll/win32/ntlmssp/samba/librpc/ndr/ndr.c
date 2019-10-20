@@ -619,7 +619,6 @@ _PUBLIC_ enum ndr_err_code ndr_pull_error(struct ndr_pull *ndr,
 #ifndef __REACTOS__
 	ret = vasprintf(&s, format, ap);
 #else
-DebugBreak();
     ret = vsprintf(s, format, ap);
 #endif
 	va_end(ap);
@@ -1197,12 +1196,10 @@ _PUBLIC_ uint32_t ndr_push_get_switch_value(struct ndr_push *ndr, const void *p)
 	return ndr_token_peek(&ndr->switch_list, p);
 }
 
-#ifndef __REACTOS__
 _PUBLIC_ uint32_t ndr_pull_get_switch_value(struct ndr_pull *ndr, const void *p)
 {
 	return ndr_token_peek(&ndr->switch_list, p);
 }
-#endif
 
 _PUBLIC_ uint32_t ndr_print_get_switch_value(struct ndr_print *ndr, const void *p)
 {
@@ -1848,6 +1845,9 @@ _PUBLIC_ enum ndr_err_code ndr_pull_relative_ptr2(struct ndr_pull *ndr, const vo
 
 #ifndef __REACTOS__
 const static struct {
+#else
+static struct {
+#endif
 	enum ndr_err_code err;
 	const char *string;
 } ndr_err_code_strings[] = {
@@ -1883,4 +1883,3 @@ _PUBLIC_ const char *ndr_map_error2string(enum ndr_err_code ndr_err)
 	}
 	return "Unknown error";
 }
-#endif

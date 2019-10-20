@@ -184,6 +184,7 @@ _PUBLIC_ void ndr_print_ntlmssp_Version(struct ndr_print *ndr, const char *name,
 
 	}
 }
+#endif
 
 _PUBLIC_ struct AV_PAIR *ndr_ntlmssp_find_av(const struct AV_PAIR_LIST *av_list,
 					     enum ntlmssp_AvId AvId)
@@ -202,4 +203,3 @@ _PUBLIC_ struct AV_PAIR *ndr_ntlmssp_find_av(const struct AV_PAIR_LIST *av_list,
 
 	return res;
 }
-#endif

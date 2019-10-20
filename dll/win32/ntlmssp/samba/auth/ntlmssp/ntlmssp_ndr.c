@@ -82,7 +82,6 @@ NTSTATUS ntlmssp_pull_CHALLENGE_MESSAGE(const DATA_BLOB *blob,
 	NTLMSSP_PULL_MESSAGE(CHALLENGE_MESSAGE, blob, mem_ctx, r);
 }
 
-#ifndef __REACTOS__
 /**
  * Pull NTLMSSP AUTHENTICATE_MESSAGE struct from a blob
  * @param blob The plain packet blob
@@ -97,6 +96,7 @@ NTSTATUS ntlmssp_pull_AUTHENTICATE_MESSAGE(const DATA_BLOB *blob,
 	NTLMSSP_PULL_MESSAGE(AUTHENTICATE_MESSAGE, blob, mem_ctx, r);
 }
 
+#ifndef __REACTOS__
 /**
  * Push NTLMSSP NEGOTIATE_MESSAGE struct into a blob
  * @param blob The plain packet blob

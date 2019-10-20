@@ -21,11 +21,11 @@
 #ifndef __REACTOS__
 
 #define NTLMSSP_NEGOTIATE_NTLM2	( NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY )
+#endif
 #define NTLMSSP_MIC_OFFSET	( 72 )
 #define NTLMSSP_MIC_SIZE	( 16 )
 #define NTLMSSP_SIGN_VERSION	( 0x01 )
 #define NTLMSSP_SIG_SIZE	( 16 )
-#endif
 enum ntlmssp_MessageType
 #ifndef USE_UINT_ENUMS
  {
@@ -181,12 +181,10 @@ struct ntlmssp_SingleHostData {
 	DATA_BLOB remaining;/* [flag(LIBNDR_FLAG_REMAINING)] */
 }/* [flag(LIBNDR_PRINT_ARRAY_HEX)] */;
 
-#ifndef __REACTOS__
 /* bitmap ntlmssp_AvFlags */
 #define NTLMSSP_AVFLAG_CONSTRAINTED_ACCOUNT ( 0x00000001 )
 #define NTLMSSP_AVFLAG_MIC_IN_AUTHENTICATE_MESSAGE ( 0x00000002 )
 #define NTLMSSP_AVFLAG_TARGET_SPN_FROM_UNTRUSTED_SOURCE ( 0x00000004 )
-#endif
 
 union ntlmssp_AvValue {
 	const char * AvNbComputerName;/* [case(MsvAvNbComputerName),flag(ndr_ntlmssp_negotiated_string_flags(NTLMSSP_NEGOTIATE_UNICODE))] */
@@ -261,15 +259,16 @@ struct NTLMv2_RESPONSE {
 	struct NTLMv2_CLIENT_CHALLENGE Challenge;
 }/* [flag(LIBNDR_PRINT_ARRAY_HEX),public] */;
 
-#ifndef __REACTOS__
 union ntlmssp_NTLM_RESPONSE_with_len {
 	struct NTLM_RESPONSE v1;/* [case(0x18)] */
 	struct NTLMv2_RESPONSE v2;/* [default] */
 }/* [nodiscriminant,public] */;
 
+#ifndef __REACTOS__
 struct ntlmssp_MIC {
 	uint8_t *MIC;
 }/* [flag(LIBNDR_PRINT_ARRAY_HEX)] */;
+#endif
 
 struct AUTHENTICATE_MESSAGE {
 	const char *Signature;/* [charset(DOS),value("NTLMSSP")] */
@@ -296,6 +295,7 @@ struct AUTHENTICATE_MESSAGE {
 	union ntlmssp_Version Version;/* [switch_is(NegotiateFlags&NTLMSSP_NEGOTIATE_VERSION)] */
 }/* [flag(LIBNDR_FLAG_REMAINING),public] */;
 
+#ifndef __REACTOS__
 struct NTLMSSP_MESSAGE_SIGNATURE {
 	uint32_t Version;/* [value(NTLMSSP_SIGN_VERSION)] */
 	uint32_t RandomPad;

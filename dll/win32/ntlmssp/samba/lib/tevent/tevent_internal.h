@@ -27,6 +27,10 @@
    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef __REACTOS__
+#include "smbdefs.h"
+#endif
+
 struct tevent_req {
 	/**
 	 * @brief What to do on completion
@@ -172,7 +176,6 @@ struct tevent_req {
 	} internal;
 };
 
-#ifndef __REACTOS__
 struct tevent_req_profile {
 	struct tevent_req_profile *prev, *next;
 	struct tevent_req_profile *parent;
@@ -186,7 +189,6 @@ struct tevent_req_profile {
 	uint64_t user_error;
 	struct tevent_req_profile *subprofiles;
 };
-#endif
 
 struct tevent_fd {
 	struct tevent_fd *prev, *next;
@@ -225,6 +227,7 @@ struct tevent_timer {
 	/* this is private for the events_ops implementation */
 	void *additional_data;
 };
+#endif
 
 struct tevent_immediate {
 	struct tevent_immediate *prev, *next;
@@ -244,6 +247,7 @@ struct tevent_immediate {
 	void *additional_data;
 };
 
+#ifndef __REACTOS__
 struct tevent_signal {
 	struct tevent_signal *prev, *next;
 	struct tevent_context *event_ctx;
@@ -270,6 +274,7 @@ struct tevent_threaded_context {
 #endif
 	struct tevent_context *event_ctx;
 };
+#endif
 
 struct tevent_debug_ops {
 	void (*debug)(void *context, enum tevent_debug_level level,
@@ -283,7 +288,6 @@ void tevent_debug(struct tevent_context *ev, enum tevent_debug_level level,
 void tevent_abort(struct tevent_context *ev, const char *reason);
 
 void tevent_common_check_double_free(TALLOC_CTX *ptr, const char *reason);
-#endif
 
 struct tevent_context {
 	/* the specific events implementation */
@@ -326,10 +330,11 @@ struct tevent_context {
 #ifndef __REACTOS__
 #ifndef HAVE_EVENT_FD
 	int wakeup_read_fd;
+#endif
+#endif /* __REACTOS__ */
 
 	/* debugging operations */
 	struct tevent_debug_ops debug_ops;
-#endif /* __REACTOS__ */
 
 	/* info about the nesting status */
 	struct {
@@ -356,6 +361,7 @@ struct tevent_context {
 		struct tevent_wrapper_glue *glue;
 	} wrapper;
 
+#ifndef __REACTOS__
 	/*
 	 * an optimization pointer into timer_events
 	 * used by used by common code via
@@ -373,9 +379,11 @@ const struct tevent_ops *tevent_find_ops_byname(const char *name);
 
 #ifndef __REACTOS__
 int tevent_common_context_destructor(struct tevent_context *ev);
+#endif
 int tevent_common_loop_wait(struct tevent_context *ev,
 			    const char *location);
 
+#ifndef __REACTOS__
 int tevent_common_fd_destructor(struct tevent_fd *fde);
 struct tevent_fd *tevent_common_add_fd(struct tevent_context *ev,
 				       TALLOC_CTX *mem_ctx,
@@ -410,6 +418,7 @@ struct timeval tevent_common_loop_timer_delay(struct tevent_context *);
 int tevent_common_invoke_timer_handler(struct tevent_timer *te,
 				       struct timeval current_time,
 				       bool *removed);
+#endif
 
 void tevent_common_schedule_immediate(struct tevent_immediate *im,
 				      struct tevent_context *ev,
@@ -420,10 +429,11 @@ void tevent_common_schedule_immediate(struct tevent_immediate *im,
 int tevent_common_invoke_immediate_handler(struct tevent_immediate *im,
 					   bool *removed);
 bool tevent_common_loop_immediate(struct tevent_context *ev);
+#ifndef __REACTOS__
 void tevent_common_threaded_activate_immediate(struct tevent_context *ev);
+#endif
 
 bool tevent_common_have_events(struct tevent_context *ev);
-#endif
 int tevent_common_wakeup_init(struct tevent_context *ev);
 #ifndef __REACTOS__
 int tevent_common_wakeup_fd(int fd);
@@ -444,9 +454,11 @@ void tevent_cleanup_pending_signal_handlers(struct tevent_signal *se);
 int tevent_common_invoke_signal_handler(struct tevent_signal *se,
 					int signum, int count, void *siginfo,
 					bool *removed);
+#endif
 
 struct tevent_context *tevent_wrapper_main_ev(struct tevent_context *ev);
 
+#ifndef __REACTOS__
 struct tevent_wrapper_ops;
 
 struct tevent_wrapper_glue {
@@ -482,8 +494,8 @@ void tevent_epoll_set_panic_fallback(struct tevent_context *ev,
 #ifdef HAVE_SOLARIS_PORTS
 bool tevent_port_init(void);
 #endif
+#endif /* __REACTOS__ */
 
 
 void tevent_trace_point_callback(struct tevent_context *ev,
 				 enum tevent_trace_point);
-#endif /* __REACTOS__ */

@@ -666,12 +666,14 @@ static int poll_event_loop_once(struct tevent_context *ev,
 	if (ev->threaded_contexts != NULL) {
 		tevent_common_threaded_activate_immediate(ev);
 	}
+#endif
 
 	if (ev->immediate_events &&
 	    tevent_common_loop_immediate(ev)) {
 		return 0;
 	}
 
+#ifndef __REACTOS__
 	tval = tevent_common_loop_timer_delay(ev);
 	if (tevent_timeval_is_zero(&tval)) {
 		return 0;
@@ -704,10 +706,10 @@ static const struct tevent_ops poll_event_ops = {
 	/*.get_fd_flags		=*/ NULL,//TODO tevent_common_fd_get_flags,
 	/*.set_fd_flags		=*/ poll_event_set_fd_flags,
 	/*.add_timer		=*/ NULL,//TODO tevent_common_add_timer_v2,
-	/*.schedule_immediate	=*/ NULL,//TODO tevent_common_schedule_immediate,
+	/*.schedule_immediate	=*/ tevent_common_schedule_immediate,
 	/*.add_signal		=*/ NULL,//TODO tevent_common_add_signal,
 	/*.loop_once		=*/ poll_event_loop_once,
-	/*.loop_wait		=*/ NULL,//TODO tevent_common_loop_wait,
+	/*.loop_wait		=*/ tevent_common_loop_wait,
 };
 #endif
 

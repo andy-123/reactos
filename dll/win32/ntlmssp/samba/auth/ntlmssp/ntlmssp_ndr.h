@@ -24,10 +24,10 @@ NTSTATUS ntlmssp_pull_NEGOTIATE_MESSAGE(const DATA_BLOB *blob,
 NTSTATUS ntlmssp_pull_CHALLENGE_MESSAGE(const DATA_BLOB *blob,
 					TALLOC_CTX *mem_ctx,
 					struct CHALLENGE_MESSAGE *r);
-#ifndef __REACTOS__
 NTSTATUS ntlmssp_pull_AUTHENTICATE_MESSAGE(const DATA_BLOB *blob,
 					   TALLOC_CTX *mem_ctx,
 					   struct AUTHENTICATE_MESSAGE *r);
+#ifndef __REACTOS__
 NTSTATUS ntlmssp_push_NEGOTIATE_MESSAGE(DATA_BLOB *blob,
 					TALLOC_CTX *mem_ctx,
 					const struct NEGOTIATE_MESSAGE *r);

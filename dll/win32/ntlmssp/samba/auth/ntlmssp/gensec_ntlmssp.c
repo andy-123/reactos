@@ -70,6 +70,7 @@ NTSTATUS gensec_ntlmssp_session_key(struct gensec_security *gensec_security,
 
 	return NT_STATUS_OK;
 }
+#endif
 
 bool gensec_ntlmssp_have_feature(struct gensec_security *gensec_security,
 				 uint32_t feature)
@@ -123,7 +124,6 @@ bool gensec_ntlmssp_have_feature(struct gensec_security *gensec_security,
 
 	return false;
 }
-#endif
 
 NTSTATUS gensec_ntlmssp_start(struct gensec_security *gensec_security)
 {

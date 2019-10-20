@@ -146,6 +146,7 @@ struct file_lists {
 /* types of configuration backends for loadparm */
 #define CONFIG_BACKEND_FILE 0
 #define CONFIG_BACKEND_REGISTRY 1
+#endif
 
 /*
    Do you want session setups at user level security with a invalid
@@ -173,6 +174,7 @@ struct file_lists {
 #define MAP_TO_GUEST_ON_BAD_PASSWORD 	2
 #define MAP_TO_GUEST_ON_BAD_UID 	3
 
+#ifndef __REACTOS__
 /*
  * This should be under the HAVE_KRB5 flag but since they're used
  * in lp_kerberos_method(), they ned to be always available

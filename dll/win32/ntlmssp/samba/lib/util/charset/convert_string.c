@@ -25,13 +25,13 @@
 #include "includes.h"
 #include "system/iconv.h"
 #else
+#include <string.h>
 #include "smbdefs.h"
 #include "samba/lib/talloc/talloc.h"
 #include "samba/lib/util/charset/charset.h"
 #include "samba/lib/util/debug.h"
 #endif
 
-#ifndef __REACTOS__
 /**
  * @file
  *
@@ -288,6 +288,7 @@ bool convert_string_error_handle(struct smb_iconv_handle *ic,
 	return convert_string_internal(ic, from, to, src, srclen, dest, destlen, converted_size);
 }
 
+#ifndef __REACTOS__
 bool convert_string_handle(struct smb_iconv_handle *ic,
 			   charset_t from, charset_t to,
 			   void const *src, size_t srclen,
@@ -513,6 +514,7 @@ _PUBLIC_ bool convert_string(charset_t from, charset_t to,
 					src, srclen,
 					dest, destlen, converted_size);
 }
+#endif
 
 /**
  * Convert string from one encoding to another, making error checking etc
@@ -534,7 +536,6 @@ _PUBLIC_ bool convert_string_error(charset_t from, charset_t to,
 					   src, srclen,
 					   dest, destlen, converted_size);
 }
-#endif
 
 /**
  * Convert between character sets, allocating a new buffer using talloc for the result.

@@ -18,6 +18,7 @@
  *  along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __REACTOS__
 #include "includes.h"
 #include "../auth/ntlmssp/ntlmssp.h"
 #include "../libcli/auth/libcli_auth.h"
@@ -25,6 +26,14 @@
 #include "../lib/crypto/hmacmd5.h"
 #include "zlib.h"
 #include "../auth/ntlmssp/ntlmssp_private.h"
+#else
+#include "smbdefs.h"
+#include "smbincludes.h"
+#include "samba/lib/crypto/hmacmd5.h"
+#include "samba/lib/util/data_blob.h"
+#include "samba/lib/util/samba_util.h"
+#include "zlib/zlib.h"
+#endif
 
 #undef DBGC_CLASS
 #define DBGC_CLASS DBGC_AUTH
@@ -58,7 +67,11 @@ static void calc_ntlmv2_key(uint8_t subkey[16],
 	MD5Init(&ctx3);
 	MD5Update(&ctx3, session_key.data, session_key.length);
 	MD5Update(&ctx3, (const uint8_t *)constant, strlen(constant)+1);
+    #ifndef __REACTOS__
 	MD5Final(subkey, &ctx3);
+    #else
+	MD5FinalSMB(subkey, &ctx3);
+    #endif
 }
 
 enum ntlmssp_direction {
@@ -73,6 +86,7 @@ static NTSTATUS ntlmssp_make_packet_signature(struct ntlmssp_state *ntlmssp_stat
 					      enum ntlmssp_direction direction,
 					      DATA_BLOB *sig, bool encrypt_sig)
 {
+    __debugbreak();
 	if (ntlmssp_state->neg_flags & NTLMSSP_NEGOTIATE_NTLM2) {
 		HMACMD5Context ctx;
 		uint8_t digest[16];
@@ -157,6 +171,7 @@ static NTSTATUS ntlmssp_make_packet_signature(struct ntlmssp_state *ntlmssp_stat
 	return NT_STATUS_OK;
 }
 
+#ifndef __REACTOS__
 NTSTATUS ntlmssp_sign_packet(struct ntlmssp_state *ntlmssp_state,
 			     TALLOC_CTX *sig_mem_ctx,
 			     const uint8_t *data, size_t length,
@@ -183,6 +198,7 @@ NTSTATUS ntlmssp_sign_packet(struct ntlmssp_state *ntlmssp_state,
 
 	return nt_status;
 }
+#endif
 
 /**
  * Check the signature of an incoming packet
@@ -357,6 +373,7 @@ NTSTATUS ntlmssp_seal_packet(struct ntlmssp_state *ntlmssp_state,
 	return NT_STATUS_OK;
 }
 
+#ifndef __REACTOS__
 /**
  * Unseal data with the NTLMSSP algorithm
  *
@@ -504,6 +521,7 @@ NTSTATUS ntlmssp_unwrap(struct ntlmssp_state *ntlmssp_state,
 		return NT_STATUS_OK;
 	}
 }
+#endif
 
 /**
    Initialise the state for NTLMSSP signing.

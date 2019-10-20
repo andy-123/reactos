@@ -96,7 +96,6 @@ _PUBLIC_ char *strlower_talloc(TALLOC_CTX *ctx, const char *src)
 	return strlower_talloc_handle(iconv_handle, ctx, src);
 }
 
-#ifndef __REACTOS__
 /**
  Convert a string to UPPER case, allocated with talloc
  source length limited to n bytes, iconv handle supplied
@@ -170,6 +169,7 @@ _PUBLIC_ char *talloc_strdup_upper(TALLOC_CTX *ctx, const char *src)
 	return strupper_talloc(ctx, src);
 }
 
+#ifndef __REACTOS__
 /**
  Find the number of 'c' chars in a string
 **/

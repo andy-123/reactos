@@ -16451,6 +16451,7 @@ void smb_init_locale(void)
 	setlocale(LC_ALL, "");
 #endif
 }
+#endif
 
 /**
  Convert a codepoint_t to upper case.
@@ -16465,7 +16466,6 @@ _PUBLIC_ codepoint_t toupper_m(codepoint_t val)
 	}
 	return upcase_table[val];
 }
-#endif
 
 /**
  Convert a codepoint_t to lower case.

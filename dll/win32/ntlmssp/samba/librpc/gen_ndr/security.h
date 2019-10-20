@@ -229,6 +229,7 @@
 #define GUID_DRS_DNS_HOST_NAME	( "72e39547-7b18-11d1-adef-00c04fd8d5cd" )
 #define GUID_DRS_ADD_DNS_HOST_NAME	( "80863791-dbe9-4eb8-837e-7f0ab55d9ac7" )
 #define GUID_DRS_BEHAVIOR_VERSION	( "d31a8757-2447-4545-8081-3bb610cacbf2" )
+#endif
 struct dom_sid {
 	uint8_t sid_rev_num;
 	int8_t num_auths;/* [range(0,15)] */
@@ -236,6 +237,7 @@ struct dom_sid {
 	uint32_t sub_auths[15];
 }/* [gensize,noprint,nopull,nopush,nosize,public] */;
 
+#ifndef __REACTOS__
 enum sec_privilege
 #ifndef USE_UINT_ENUMS
  {

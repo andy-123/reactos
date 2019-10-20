@@ -510,9 +510,11 @@ struct sockaddr_storage;
 NTSTATUS ndr_map_error2ntstatus(enum ndr_err_code ndr_err);
 #ifndef __REACTOS__
 int ndr_map_error2errno(enum ndr_err_code ndr_err);
+#endif
 const char *ndr_map_error2string(enum ndr_err_code ndr_err);
 #define ndr_errstr ndr_map_error2string
 
+#ifndef __REACTOS__
 /* FIXME: Use represent_as instead */
 struct dom_sid;
 enum ndr_err_code ndr_push_dom_sid2(struct ndr_push *ndr, int ndr_flags, const struct dom_sid *sid);
@@ -634,9 +636,7 @@ enum ndr_err_code ndr_pull_set_switch_value(struct ndr_pull *ndr, const void *p,
 enum ndr_err_code ndr_print_set_switch_value(struct ndr_print *ndr, const void *p, uint32_t val);
 #endif
 uint32_t ndr_push_get_switch_value(struct ndr_push *ndr, const void *p);
-#ifndef __REACTOS__
 uint32_t ndr_pull_get_switch_value(struct ndr_pull *ndr, const void *p);
-#endif
 uint32_t ndr_print_get_switch_value(struct ndr_print *ndr, const void *p);
 uint32_t ndr_pull_steal_switch_value(struct ndr_pull *ndr, const void *p);
 enum ndr_err_code ndr_pull_struct_blob(const DATA_BLOB *blob, TALLOC_CTX *mem_ctx, void *p, ndr_pull_flags_fn_t fn);

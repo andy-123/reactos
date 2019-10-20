@@ -32,6 +32,7 @@
 #ifndef __REACTOS__
 #include <talloc.h>
 #else
+#include "smbdefs.h"
 #include <samba/lib/talloc/talloc.h>
 #endif
 #include <sys/time.h>
@@ -117,6 +118,7 @@ typedef void (*tevent_signal_handler_t)(struct tevent_context *ev,
  */
 struct tevent_context *tevent_context_init(TALLOC_CTX *mem_ctx);
 
+#ifndef __REACTOS__
 /**
  * @brief Create a event_context structure and select a specific backend.
  *
@@ -266,6 +268,7 @@ struct tevent_timer *_tevent_add_timer(struct tevent_context *ev,
  * event. This is not an offset.
  */
 void tevent_update_timer(struct tevent_timer *te, struct timeval next_event);
+#endif
 
 #ifdef DOXYGEN
 /**
@@ -317,6 +320,7 @@ void _tevent_schedule_immediate(struct tevent_immediate *im,
 				   #handler, __location__);
 #endif
 
+#ifndef __REACTOS__
 #ifdef DOXYGEN
 /**
  * @brief Add a tevent signal handler
@@ -405,6 +409,7 @@ int _tevent_loop_once(struct tevent_context *ev, const char *location);
 #define tevent_loop_once(ev) \
 	_tevent_loop_once(ev, __location__)
 #endif
+#endif /* __REACTOS__ */
 
 #ifdef DOXYGEN
 /**
@@ -425,6 +430,7 @@ int _tevent_loop_wait(struct tevent_context *ev, const char *location);
 #endif
 
 
+#ifndef __REACTOS__
 /**
  * Assign a function to run when a tevent_fd is freed
  *
@@ -519,6 +525,7 @@ void tevent_set_abort_fn(void (*abort_fn)(const char *reason));
  */
 #define TEVENT_FD_NOT_READABLE(fde) \
 	tevent_fd_set_flags(fde, tevent_fd_get_flags(fde) & ~TEVENT_FD_READ)
+#endif
 
 /**
  * Debug level of tevent
@@ -530,6 +537,7 @@ enum tevent_debug_level {
 	TEVENT_DEBUG_TRACE
 };
 
+#ifndef __REACTOS__
 /**
  * @brief The tevent debug callbac.
  *
@@ -571,6 +579,7 @@ int tevent_set_debug(struct tevent_context *ev,
  * function for tevent_set_debug()
  */
 int tevent_set_debug_stderr(struct tevent_context *ev);
+#endif
 
 enum tevent_trace_point {
 	/**
@@ -607,6 +616,7 @@ typedef void (*tevent_trace_callback_t)(enum tevent_trace_point,
  * @note The callback will be called at trace points defined by
  * tevent_trace_point.  Call with NULL to reset.
  */
+#ifndef __REACTOS__
 void tevent_set_trace_callback(struct tevent_context *ev,
 			       tevent_trace_callback_t cb,
 			       void *private_data);
@@ -728,6 +738,7 @@ void tevent_get_trace_callback(struct tevent_context *ev,
  *
  * @{
  */
+#endif
 
 /**
  * An async request moves from TEVENT_REQ_INIT to
@@ -822,6 +833,7 @@ void *_tevent_req_callback_data(struct tevent_req *req);
 	talloc_get_type_abort(_tevent_req_callback_data(_req), _type)
 #endif
 
+#ifndef __REACTOS__
 #ifdef DOXYGEN
 /**
  * @brief Get the private data for a callback from a tevent request structure.
@@ -835,6 +847,7 @@ void *tevent_req_callback_data_void(struct tevent_req *req);
 #define tevent_req_callback_data_void(_req) \
 	_tevent_req_callback_data(_req)
 #endif
+#endif /* REACTOS */
 
 #ifdef DOXYGEN
 /**
@@ -886,6 +899,7 @@ void *_tevent_req_data(struct tevent_req *req);
  */
 typedef char *(*tevent_req_print_fn)(struct tevent_req *req, TALLOC_CTX *ctx);
 
+#ifndef __REACTOS__
 /**
  * @brief This function sets a print function for the given request.
  *
@@ -929,6 +943,7 @@ char *tevent_req_default_print(struct tevent_req *req, TALLOC_CTX *mem_ctx);
  * @return              Text representation of request.
  */
 char *tevent_req_print(TALLOC_CTX *mem_ctx, struct tevent_req *req);
+#endif
 
 /**
  * @brief A typedef for a cancel function for a tevent request.
@@ -939,6 +954,7 @@ char *tevent_req_print(TALLOC_CTX *mem_ctx, struct tevent_req *req);
  */
 typedef bool (*tevent_req_cancel_fn)(struct tevent_req *req);
 
+#ifndef __REACTOS__
 /**
  * @brief This function sets a cancel function for the given tevent request.
  *
@@ -977,6 +993,7 @@ bool _tevent_req_cancel(struct tevent_req *req, const char *location);
 #define tevent_req_cancel(req) \
 	_tevent_req_cancel(req, __location__)
 #endif
+#endif /* __REACTOS__ */
 
 /**
  * @brief A typedef for a cleanup function for a tevent request.
@@ -989,6 +1006,7 @@ bool _tevent_req_cancel(struct tevent_req *req, const char *location);
 typedef void (*tevent_req_cleanup_fn)(struct tevent_req *req,
 				      enum tevent_req_state req_state);
 
+#ifndef __REACTOS__
 /**
  * @brief This function sets a cleanup function for the given tevent request.
  *
@@ -1012,6 +1030,7 @@ typedef void (*tevent_req_cleanup_fn)(struct tevent_req *req,
  * @param[in]  fn       A pointer to the cancel function.
  */
 void tevent_req_set_cleanup_fn(struct tevent_req *req, tevent_req_cleanup_fn fn);
+#endif
 
 #ifdef DOXYGEN
 /**
@@ -1052,6 +1071,7 @@ struct tevent_req *_tevent_req_create(TALLOC_CTX *mem_ctx,
 			   #_type, __location__)
 #endif
 
+#ifndef __REACTOS__
 /**
  * @brief Set a timeout for an async request. On failure, "req" is already
  *        set to state TEVENT_REQ_NO_MEMORY.
@@ -1089,6 +1109,7 @@ void _tevent_req_notify_callback(struct tevent_req *req, const char *location);
 #define tevent_req_notify_callback(req)		\
 	_tevent_req_notify_callback(req, __location__)
 #endif
+#endif /* __REACTOS__ */
 
 #ifdef DOXYGEN
 /**
@@ -1149,6 +1170,7 @@ bool _tevent_req_error(struct tevent_req *req,
 	_tevent_req_error(req, error, __location__)
 #endif
 
+
 #ifdef DOXYGEN
 /**
  * @brief Helper function for nomem check.
@@ -1177,6 +1199,7 @@ bool _tevent_req_nomem(const void *p,
 	_tevent_req_nomem(p, req, __location__)
 #endif
 
+#ifndef __REACTOS__
 #ifdef DOXYGEN
 /**
  * @brief Indicate out of memory to a request
@@ -1190,6 +1213,7 @@ void _tevent_req_oom(struct tevent_req *req,
 #define tevent_req_oom(req) \
 	_tevent_req_oom(req, __location__)
 #endif
+#endif /* REACTOS */
 
 /**
  * @brief Finish a request before the caller had a chance to set the callback.
@@ -1466,6 +1490,7 @@ const struct tevent_req_profile *tevent_req_profile_get_subprofiles(
  */
 const struct tevent_req_profile *tevent_req_profile_next(
 	const struct tevent_req_profile *profile);
+#endif
 
 /**
  * @brief Create a fresh tevent_req_profile
@@ -1476,6 +1501,7 @@ const struct tevent_req_profile *tevent_req_profile_next(
  */
 struct tevent_req_profile *tevent_req_profile_create(TALLOC_CTX *mem_ctx);
 
+#ifndef __REACTOS__
 /**
  * @brief Set a profile's name
  *
@@ -1629,6 +1655,7 @@ int tevent_timeval_compare(const struct timeval *tv1,
  * @return              A zero timeval value.
  */
 struct timeval tevent_timeval_zero(void);
+#endif
 
 /**
  * @brief Get a timeval value for the current time.
@@ -1637,6 +1664,7 @@ struct timeval tevent_timeval_zero(void);
  */
 struct timeval tevent_timeval_current(void);
 
+#ifndef __REACTOS__
 /**
  * @brief Get a timeval structure with the given values.
  *
@@ -1949,6 +1977,7 @@ struct tevent_req *tevent_queue_wait_send(TALLOC_CTX *mem_ctx,
  * @see tevent_queue_wait_send()
  */
 bool tevent_queue_wait_recv(struct tevent_req *req);
+#endif
 
 typedef int (*tevent_nesting_hook)(struct tevent_context *ev,
 				   void *private_data,
@@ -1957,6 +1986,7 @@ typedef int (*tevent_nesting_hook)(struct tevent_context *ev,
 				   void *stack_ptr,
 				   const char *location);
 
+#ifndef __REACTOS__
 /**
  * @brief Create a tevent_thread_proxy for message passing between threads.
  *
@@ -2514,8 +2544,8 @@ bool tevent_context_same_loop(struct tevent_context *ev1,
 
 #endif /* TEVENT_COMPAT_DEFINES */
 
-#endif /* __REACTOS__ */
-
 /* @} */
+
+#endif /* __REACTOS__ */
 
 #endif /* __TEVENT_H__ */

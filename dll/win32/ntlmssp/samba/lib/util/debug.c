@@ -184,7 +184,8 @@ static const char *default_classname_table[] = {
  * system has been initialized.
  */
 static struct debug_class debug_class_list_initial[ARRAY_SIZE(default_classname_table)] = {
-	/*[DBGC_ALL] = (struct debug_class)*/ { /*.fd = */ 2 },
+	/*[DBGC_ALL] = (struct debug_class)*/ { /*.fd = */ DEBUGLEVEL, NULL, 2 },
+	/*[DBGC_ALL] = (struct debug_class)*/ { /*.fd = */ DEBUGLEVEL, NULL, 2 },
 };
 
 static size_t debug_num_classes = 0;

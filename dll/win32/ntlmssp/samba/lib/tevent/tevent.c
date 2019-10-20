@@ -77,6 +77,7 @@
 #include <stdint.h>
 #include <smbdefs.h>
 #include <string.h>
+#define TEVENT_DEPRECATED 1
 #include <samba/lib/tevent/tevent.h>
 #include <samba/lib/tevent/tevent_internal.h>
 #include <samba/lib/util/dlinklist.h>
@@ -320,7 +321,9 @@ int tevent_common_context_destructor(struct tevent_context *ev)
     #ifndef __REACTOS__
 	struct tevent_fd *fd, *fn;
 	struct tevent_timer *te, *tn;
+    #endif
 	struct tevent_immediate *ie, *in;
+    #ifndef __REACTOS__
 	struct tevent_signal *se, *sn;
 	struct tevent_wrapper_glue *gl, *gn;
     #endif
@@ -405,6 +408,7 @@ int tevent_common_context_destructor(struct tevent_context *ev)
 		te->event_ctx = NULL;
 		DLIST_REMOVE(ev->timer_events, te);
 	}
+#endif
 
 	for (ie = ev->immediate_events; ie; ie = in) {
 		in = ie->next;
@@ -414,6 +418,7 @@ int tevent_common_context_destructor(struct tevent_context *ev)
 		DLIST_REMOVE(ev->immediate_events, ie);
 	}
 
+#ifndef __REACTOS__
 	for (se = ev->signal_events; se; se = sn) {
 		sn = se->next;
 		se->wrapper = NULL;
@@ -480,7 +485,6 @@ static int tevent_common_context_constructor(struct tevent_context *ev)
 	return 0;
 }
 
-#ifndef __REACTOS__
 void tevent_common_check_double_free(TALLOC_CTX *ptr, const char *reason)
 {
 	void *parent_ptr = talloc_parent(ptr);
@@ -499,7 +503,6 @@ void tevent_common_check_double_free(TALLOC_CTX *ptr, const char *reason)
 
 	tevent_abort(NULL, reason);
 }
-#endif
 
 /*
   create a event_context structure for a specific implemementation.
@@ -638,20 +641,27 @@ bool tevent_signal_support(struct tevent_context *ev)
 	}
 	return false;
 }
+#endif
 
 static void (*tevent_abort_fn)(const char *reason);
 
+#ifndef __REACTOS__
 void tevent_set_abort_fn(void (*abort_fn)(const char *reason))
 {
 	tevent_abort_fn = abort_fn;
 }
+#endif
 
 void tevent_abort(struct tevent_context *ev, const char *reason)
 {
+#ifndef __REACTOS__
 	if (ev != NULL) {
 		tevent_debug(ev, TEVENT_DEBUG_FATAL,
 			     "abort: %s\n", reason);
 	}
+#else
+    printf("FIXME tevent_debug %s ...\n", __location__);
+#endif
 
 	if (!tevent_abort_fn) {
 		abort();
@@ -660,6 +670,7 @@ void tevent_abort(struct tevent_context *ev, const char *reason)
 	tevent_abort_fn(reason);
 }
 
+#ifndef __REACTOS__
 /*
   add a timer event
   return NULL on failure
@@ -675,6 +686,7 @@ struct tevent_timer *_tevent_add_timer(struct tevent_context *ev,
 	return ev->ops->add_timer(ev, mem_ctx, next_event, handler, private_data,
 				  handler_name, location);
 }
+#endif
 
 /*
   allocate an immediate event
@@ -688,7 +700,12 @@ struct tevent_immediate *_tevent_create_immediate(TALLOC_CTX *mem_ctx,
 	im = talloc(mem_ctx, struct tevent_immediate);
 	if (im == NULL) return NULL;
 
+#ifndef __REACTOS__
 	*im = (struct tevent_immediate) { .create_location = location };
+#else
+    memset(im, 0, sizeof(*im));
+	im->create_location = location;
+#endif
 
 	return im;
 }
@@ -707,6 +724,7 @@ void _tevent_schedule_immediate(struct tevent_immediate *im,
 				    handler_name, location);
 }
 
+#ifndef __REACTOS__
 /*
   add a signal event
 
@@ -757,6 +775,7 @@ void tevent_loop_set_nesting_hook(struct tevent_context *ev,
 	ev->nesting.hook_fn = hook;
 	ev->nesting.hook_private = private_data;
 }
+#endif
 
 static void tevent_abort_nesting(struct tevent_context *ev, const char *location)
 {
@@ -829,6 +848,7 @@ done:
 	return ret;
 }
 
+#ifndef __REACTOS__
 /*
   this is a performance optimization for the samba4 nested event loop problems
 */
@@ -894,6 +914,7 @@ done:
 	ev->nesting.level--;
 	return ret;
 }
+#endif
 
 bool tevent_common_have_events(struct tevent_context *ev)
 {
@@ -951,6 +972,7 @@ int _tevent_loop_wait(struct tevent_context *ev, const char *location)
 }
 
 
+#ifndef __REACTOS__
 /*
   re-initialise a tevent context. This leaves you with the same
   event context, but all events are wiped and the structure is

@@ -60,6 +60,7 @@ struct gensec_target {
 	const char *service;
 	const char *service_description;
 };
+#endif
 
 #define GENSEC_FEATURE_SESSION_KEY	0x00000001
 #define GENSEC_FEATURE_SIGN		0x00000002
@@ -77,7 +78,6 @@ struct gensec_target {
 #define GENSEC_FEATURE_LDAPS_TRANSPORT	0x00002000
 
 #define GENSEC_EXPIRE_TIME_INFINITY (NTTIME)0x8000000000000000LL
-#endif
 
 /* GENSEC mode */
 enum gensec_role
@@ -183,6 +183,7 @@ NTSTATUS gensec_update_recv(struct tevent_req *req, TALLOC_CTX *out_mem_ctx, DAT
  */
 void gensec_want_feature(struct gensec_security *gensec_security,
 			 uint32_t feature);
+#endif
 /**
  * @brief Ask for one feature after the finished authentication
  *
@@ -207,6 +208,7 @@ void gensec_want_feature(struct gensec_security *gensec_security,
  */
 bool gensec_have_feature(struct gensec_security *gensec_security,
 			 uint32_t feature);
+#ifndef __REACTOS__
 NTTIME gensec_expire_time(struct gensec_security *gensec_security);
 NTSTATUS gensec_set_credentials(struct gensec_security *gensec_security, struct cli_credentials *credentials);
 /**

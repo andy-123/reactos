@@ -22,13 +22,20 @@
 
 #ifndef __REACTOS__
 #include "librpc/gen_ndr/auth.h"
+#else
+#include "samba/librpc/gen_ndr/auth.h"
 
+struct auth_session_info;
+#endif
+
+#ifndef __REACTOS__
 #define USER_INFO_CASE_INSENSITIVE_USERNAME 0x01 /* username may be in any case */
 #define USER_INFO_CASE_INSENSITIVE_PASSWORD 0x02 /* password may be in any case */
 #define USER_INFO_DONT_CHECK_UNIX_ACCOUNT   0x04 /* don't check unix account status */
 #define USER_INFO_INTERACTIVE_LOGON         0x08 /* Interactive logon */
 /*unused #define USER_INFO_LOCAL_SAM_ONLY   0x10    Only authenticate against the local SAM, do not map missing passwords to NO_SUCH_USER */
 #define USER_INFO_INFO3_AND_NO_AUTHZ        0x20 /* Only fill in server_info->info3 and do not do any authorization steps */
+#endif
 
 enum auth_password_state {
 	AUTH_PASSWORD_PLAIN = 1,
@@ -41,7 +48,6 @@ enum auth_password_state {
 #define AUTH_SESSION_INFO_SIMPLE_PRIVILEGES  0x04 /* Use a trivial map between users and privilages, rather than a DB */
 #define AUTH_SESSION_INFO_UNIX_TOKEN         0x08 /* The returned token must have the unix_token and unix_info elements provided */
 #define AUTH_SESSION_INFO_NTLM               0x10 /* The returned token must have authenticated-with-NTLM flag set */
-#endif
 
 struct auth_usersupplied_info
 {
@@ -59,7 +65,6 @@ struct auth_usersupplied_info
 		const char *domain_name;
 	} client, mapped;
 
-#ifndef __REACTOS__
 	enum auth_password_state password_state;
 
 	struct {
@@ -76,6 +81,7 @@ struct auth_usersupplied_info
 	} password;
 	uint32_t flags;
 
+#ifndef __REACTOS__
 	struct {
 		uint32_t negotiate_flags;
 		enum netr_SchannelType secure_channel_type;
@@ -133,7 +139,6 @@ struct auth4_context {
 
 	/* Private data for the callbacks on this auth context */
 	void *private_data;
-#ifndef __REACTOS__
 	NTSTATUS (*check_ntlm_password)(struct auth4_context *auth_ctx,
 					TALLOC_CTX *mem_ctx,
 					const struct auth_usersupplied_info *user_info,
@@ -150,11 +155,9 @@ struct auth4_context {
 					void **server_returned_info,
 					DATA_BLOB *nt_session_key,
 					DATA_BLOB *lm_session_key);
-#endif
 
 	NTSTATUS (*get_ntlm_challenge)(struct auth4_context *auth_ctx, uint8_t chal[8]);
 
-#ifndef __REACTOS__
 	NTSTATUS (*set_ntlm_challenge)(struct auth4_context *auth_ctx, const uint8_t chal[8], const char *set_by);
 
 	NTSTATUS (*generate_session_info)(struct auth4_context *auth_context,
@@ -164,6 +167,7 @@ struct auth4_context {
 					  uint32_t session_info_flags,
 					  struct auth_session_info **session_info);
 
+#ifndef __REACTOS__
 	NTSTATUS (*generate_session_info_pac)(struct auth4_context *auth_ctx,
 					      TALLOC_CTX *mem_ctx,
 					      struct smb_krb5_context *smb_krb5_context,
@@ -181,6 +185,7 @@ struct auth4_context {
 #define AUTHZ_TRANSPORT_PROTECTION_TLS "TLS"
 #define AUTHZ_TRANSPORT_PROTECTION_SEAL "SEAL"
 #define AUTHZ_TRANSPORT_PROTECTION_SIGN "SIGN"
+#endif
 
 /*
  * Log details of an authentication attempt.
@@ -199,6 +204,7 @@ void log_authentication_event(struct imessaging_context *msg_ctx,
 			      const char *unix_username,
 			      struct dom_sid *sid);
 
+#ifndef __REACTOS__
 /*
  * Log details of a successful authorization to a service.
  *

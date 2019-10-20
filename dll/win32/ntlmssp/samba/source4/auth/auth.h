@@ -63,7 +63,6 @@ struct smb_krb5_context;
 struct auth_operations {
 	const char *name;
 
-#ifndef __REACTOS__
 	/* Given the user supplied info, check if this backend want to handle the password checking */
 
 	NTSTATUS (*want_check)(struct auth_method_context *ctx, TALLOC_CTX *mem_ctx,
@@ -84,6 +83,7 @@ struct auth_operations {
 				struct auth_user_info_dc **interim_info,
 				bool *authoritative);
 
+#ifndef __REACTOS__
 	/* Lookup a 'session info interim' return based only on the principal or DN */
 	NTSTATUS (*get_user_info_dc_principal)(TALLOC_CTX *mem_ctx,
 						       struct auth4_context *auth_context,
@@ -112,12 +112,14 @@ struct auth_critical_sizes {
 	int sizeof_auth_usersupplied_info;
 	int sizeof_auth_user_info_dc;
 };
+#endif
 
  NTSTATUS encrypt_user_info(TALLOC_CTX *mem_ctx, struct auth4_context *auth_context,
 			   enum auth_password_state to_state,
 			   const struct auth_usersupplied_info *user_info_in,
 			   const struct auth_usersupplied_info **user_info_encrypted);
 
+#ifndef __REACTOS__
 #include "auth/session.h"
 #include "auth/unix_token_proto.h"
 #include "auth/system_session_proto.h"
@@ -142,6 +144,7 @@ NTSTATUS authsam_account_ok(TALLOC_CTX *mem_ctx,
 			    bool password_change);
 
 struct auth_session_info *system_session(struct loadparm_context *lp_ctx);
+#endif
 NTSTATUS authsam_make_user_info_dc(TALLOC_CTX *mem_ctx, struct ldb_context *sam_ctx,
 					   const char *netbios_name,
 					   const char *domain_name,
@@ -150,6 +153,7 @@ NTSTATUS authsam_make_user_info_dc(TALLOC_CTX *mem_ctx, struct ldb_context *sam_
 					   struct ldb_message *msg,
 					   DATA_BLOB user_sess_key, DATA_BLOB lm_sess_key,
 				  struct auth_user_info_dc **_user_info_dc);
+#ifndef __REACTOS__
 NTSTATUS authsam_update_user_info_dc(TALLOC_CTX *mem_ctx,
 			struct ldb_context *sam_ctx,
 			struct auth_user_info_dc *user_info_dc);
@@ -212,6 +216,7 @@ NTSTATUS authenticate_ldap_simple_bind(TALLOC_CTX *mem_ctx,
 				       const char *dn,
 				       const char *password,
 				       struct auth_session_info **session_info);
+#endif
 
 struct tevent_req *auth_check_password_send(TALLOC_CTX *mem_ctx,
 					    struct tevent_context *ev,
@@ -224,6 +229,7 @@ NTSTATUS auth_check_password_recv(struct tevent_req *req,
 
 NTSTATUS auth_context_set_challenge(struct auth4_context *auth_ctx, const uint8_t chal[8], const char *set_by);
 
+#ifndef __REACTOS__
 NTSTATUS samba_server_gensec_start(TALLOC_CTX *mem_ctx,
 				   struct tevent_context *event_ctx,
 				   struct imessaging_context *msg_ctx,

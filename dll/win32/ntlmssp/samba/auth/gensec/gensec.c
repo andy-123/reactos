@@ -20,6 +20,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef __REACTOS__
 #include "includes.h"
 #include "system/network.h"
 #define TEVENT_DEPRECATED 1
@@ -30,7 +31,11 @@
 #include "auth/gensec/gensec_internal.h"
 #include "librpc/gen_ndr/dcerpc.h"
 #include "auth/common_auth.h"
+#else
+#include "smbincludes.h"
+#endif
 
+#ifndef __REACTOS__
 #undef DBGC_CLASS
 #define DBGC_CLASS DBGC_AUTH
 
@@ -817,3 +822,4 @@ _PUBLIC_ const char *gensec_get_target_principal(struct gensec_security *gensec_
 
 	return NULL;
 }
+#endif

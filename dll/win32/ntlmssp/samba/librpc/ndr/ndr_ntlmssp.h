@@ -33,7 +33,7 @@ _PUBLIC_ void ndr_print_ntlmssp_lm_response(TALLOC_CTX *mem_ctx,
 					    const DATA_BLOB *lm_response,
 					    bool ntlmv2);
 _PUBLIC_ void ndr_print_ntlmssp_Version(struct ndr_print *ndr, const char *name, const union ntlmssp_Version *r);
+#endif
 
 _PUBLIC_ struct AV_PAIR *ndr_ntlmssp_find_av(const struct AV_PAIR_LIST *av_list,
 					     enum ntlmssp_AvId AvId);
-#endif

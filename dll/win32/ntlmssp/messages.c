@@ -19,6 +19,10 @@
 #include "ntlmssp.h"
 #include "ciphers.h"
 #include "protocol.h"
+#include "smbdefs.h"
+#include "smbhelper.h"
+#include "smbincludes.h"
+#include "samba/lib/talloc/talloc.h"
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
@@ -29,6 +33,66 @@ WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
         ULONG fQOP, PSecBufferDesc pMessage, ULONG MessageSeqNo)
 {
+    #ifdef USE_SAMBA
+
+    PNTLMSSP_CONTEXT_SVR ctx;
+    PSecBuffer data_buffer = NULL;
+    PSecBuffer signature_buffer = NULL;
+    int index;
+    NTSTATUS st;
+    DATA_BLOB sig;
+    struct gensec_security *gs;
+    struct ntlmssp_state *state;
+    struct gensec_ntlmssp_context *gensec_ntlmssp;
+
+    ERR("EncryptMessage(%p %d %p %d)\n", phContext, fQOP, pMessage, MessageSeqNo);
+
+    if(fQOP)
+        FIXME("Ignoring fQOP\n");
+
+    if(!phContext)
+        return SEC_E_INVALID_HANDLE;
+
+    ctx = NtlmReferenceContextSvr(phContext->dwLower);
+    if (!ctx)
+    {
+        ERR("no context\n");
+        return SEC_E_INVALID_HANDLE;
+    }
+
+    TRACE("pMessage->cBuffers %d\n", pMessage->cBuffers);
+    /* extract data and signature buffers */
+    for (index = 0; index < (int) pMessage->cBuffers; index++)
+    {
+        TRACE("pMessage->pBuffers[index].BufferType %d\n", pMessage->pBuffers[index].BufferType);
+        if (pMessage->pBuffers[index].BufferType == SECBUFFER_DATA)
+            data_buffer = &pMessage->pBuffers[index];
+        else if (pMessage->pBuffers[index].BufferType == SECBUFFER_TOKEN)
+            signature_buffer = &pMessage->pBuffers[index];
+    }
+
+    gs = ctx->samba_gs;
+
+	gensec_ntlmssp = talloc_get_type_abort(gs->private_data,
+				                           struct gensec_ntlmssp_context);
+    state = gensec_ntlmssp->ntlmssp_state;
+
+    st = ntlmssp_seal_packet(state, NULL,
+                             data_buffer->pvBuffer, data_buffer->cbBuffer,
+                             data_buffer->pvBuffer, data_buffer->cbBuffer,
+                             &sig);
+    if (!NT_STATUS_IS_OK(st))
+        return SEC_E_INTERNAL_ERROR;//??
+
+    if (signature_buffer->cbBuffer < sig.length)
+        return SEC_E_INSUFFICIENT_MEMORY;
+    signature_buffer->cbBuffer = sig.length;
+    memcpy(signature_buffer->pvBuffer, sig.data, sig.length);
+
+    talloc_free(sig.data);
+
+    return SEC_E_OK;
+    #else
     SECURITY_STATUS ret = SEC_E_OK;
     BOOL bRet;
     PSecBuffer data_buffer = NULL;
@@ -111,6 +175,7 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
 exit:
     NtlmDereferenceContext(phContext->dwLower);
     return ret;
+    #endif
 }
 
 /***********************************************************************

@@ -41,6 +41,7 @@
 #include "smbdefs.h"
 #include "smbincludes.h"
 #include "samba/source4/auth/auth.h"
+#include "samba/libcli/auth/ntlm_check.h"
 #endif
 
 #undef DBGC_CLASS
@@ -51,6 +52,7 @@ NTSTATUS auth_sam_init(void);
 #ifndef __REACTOS__
 extern const char *user_attrs[];
 extern const char *domain_ref_attrs[];
+#endif
 
 /****************************************************************************
  Do a specific test for an smb password being correct, given a smb_password and
@@ -93,7 +95,7 @@ static NTSTATUS authsam_password_ok(struct auth4_context *auth_context,
 					     lm_pwd, nt_pwd);
 		NT_STATUS_NOT_OK_RETURN(status);
 		break;
-		
+
 	case AUTH_PASSWORD_RESPONSE:
 		status = ntlm_password_check(mem_ctx, 
 					     lpcfg_lanman_auth(auth_context->lp_ctx),
@@ -114,6 +116,7 @@ static NTSTATUS authsam_password_ok(struct auth4_context *auth_context,
 	return NT_STATUS_OK;
 }
 
+#ifndef __REACTOS__
 static void auth_sam_trigger_zero_password(TALLOC_CTX *mem_ctx,
 					   struct imessaging_context *msg_ctx,
 					   struct tevent_context *event_ctx,
@@ -204,6 +207,7 @@ static void auth_sam_trigger_repl_secret(TALLOC_CTX *mem_ctx,
 	talloc_free(req);
 	TALLOC_FREE(tmp_ctx);
 }
+#endif
 
 
 /*
@@ -220,23 +224,30 @@ static NTSTATUS authsam_password_check_and_record(struct auth4_context *auth_con
 						  DATA_BLOB *lm_sess_key,
 						  bool *authoritative)
 {
+    #ifndef __REACTOS__
 	NTSTATUS nt_status;
+    #endif
 	NTSTATUS auth_status;
 	TALLOC_CTX *tmp_ctx;
+    #ifndef __REACTOS__
 	int i, ret;
 	int history_len = 0;
 	struct ldb_context *sam_ctx = auth_context->sam_ctx;
 	const char * const attrs[] = { "pwdHistoryLength", NULL };
 	struct ldb_message *dom_msg;
+    #endif
 	struct samr_Password *lm_pwd;
 	struct samr_Password *nt_pwd;
+    #ifndef __REACTOS__
 	bool am_rodc;
+    #endif
 
 	tmp_ctx = talloc_new(mem_ctx);
 	if (tmp_ctx == NULL) {
 		return NT_STATUS_NO_MEMORY;
 	}
 
+    #ifndef __REACTOS__
 	/*
 	 * This call does more than what it appears to do, it also
 	 * checks for the account lockout.
@@ -279,6 +290,16 @@ static NTSTATUS authsam_password_check_and_record(struct auth4_context *auth_con
 			return NT_STATUS_NOT_IMPLEMENTED;
 		}
 	}
+    #else
+    lm_pwd = talloc_zero(NULL, struct samr_Password);
+    nt_pwd = talloc_zero(NULL, struct samr_Password);
+    /* hack */
+    memcpy(lm_pwd->hash, "\1\2\3\0", 4);
+    memset(nt_pwd->hash, 0, sizeof(nt_pwd->hash));
+    NTOWFv1(L"ROSauth!", nt_pwd->hash);
+    //strcpy((char*)nt_pwd->hash, "ROSauth!");
+    //memcpy(nt_pwd->hash, "\6\7\4\0", 4);
+    #endif
 
 	auth_status = authsam_password_ok(auth_context, tmp_ctx,
 					  acct_flags,
@@ -303,6 +324,11 @@ static NTSTATUS authsam_password_check_and_record(struct auth4_context *auth_con
 		return auth_status;
 	}
 
+    #ifdef __REACTOS__
+    /* return auth_status anyway! */
+	TALLOC_FREE(tmp_ctx);
+    return auth_status;
+    #else
 	/*
 	 * We only continue if this was a wrong password
 	 * and we'll always return NT_STATUS_WRONG_PASSWORD
@@ -523,6 +549,7 @@ static NTSTATUS authsam_password_check_and_record(struct auth4_context *auth_con
 
 	TALLOC_FREE(tmp_ctx);
 	return NT_STATUS_WRONG_PASSWORD;
+    #endif
 }
 
 static NTSTATUS authsam_authenticate(struct auth4_context *auth_context,
@@ -534,14 +561,23 @@ static NTSTATUS authsam_authenticate(struct auth4_context *auth_context,
 				     bool *authoritative)
 {
 	NTSTATUS nt_status;
+    #ifndef __REACTOS__
 	bool interactive = (user_info->password_state == AUTH_PASSWORD_HASH);
+    #endif
+    #ifndef __REACTOS__
 	uint32_t acct_flags = samdb_result_acct_flags(msg, NULL);
+    #else
+	uint32_t acct_flags = 0;/*??*/
+    #endif
+    #ifndef __REACTOS__
 	struct netr_SendToSamBase *send_to_sam = NULL;
+    #endif
 	TALLOC_CTX *tmp_ctx = talloc_new(mem_ctx);
 	if (!tmp_ctx) {
 		return NT_STATUS_NO_MEMORY;
 	}
 
+    #ifndef __REACTOS__
 	/* You can only do an interactive login to normal accounts */
 	if (user_info->flags & USER_INFO_INTERACTIVE_LOGON) {
 		if (!(acct_flags & ACB_NORMAL)) {
@@ -563,6 +599,7 @@ static NTSTATUS authsam_authenticate(struct auth4_context *auth_context,
 			return NT_STATUS_SMARTCARD_LOGON_REQUIRED;
 		}
 	}
+    #endif
 
 	nt_status = authsam_password_check_and_record(auth_context, tmp_ctx,
 						      domain_dn, msg, acct_flags,
@@ -574,6 +611,7 @@ static NTSTATUS authsam_authenticate(struct auth4_context *auth_context,
 		return nt_status;
 	}
 
+    #ifndef __REACTOS__
 	nt_status = authsam_account_ok(tmp_ctx, auth_context->sam_ctx,
 				       user_info->logon_parameters,
 				       domain_dn,
@@ -612,6 +650,10 @@ static NTSTATUS authsam_authenticate(struct auth4_context *auth_context,
 
 	TALLOC_FREE(tmp_ctx);
 	return nt_status;
+    #else
+    /* HACK HACK HACK */
+    return NT_STATUS_OK;
+    #endif
 }
 
 
@@ -628,12 +670,14 @@ static NTSTATUS authsam_check_password_internals(struct auth_method_context *ctx
 	struct ldb_dn *domain_dn;
 	DATA_BLOB user_sess_key, lm_sess_key;
 	TALLOC_CTX *tmp_ctx;
+#ifndef __REACTOS__
 	const char *p = NULL;
 
 	if (ctx->auth_ctx->sam_ctx == NULL) {
 		DEBUG(0, ("No SAM available, cannot log in users\n"));
 		return NT_STATUS_INVALID_SYSTEM_SERVICE;
 	}
+#endif
 
 	if (!account_name || !*account_name) {
 		/* 'not for me' */
@@ -645,6 +689,7 @@ static NTSTATUS authsam_check_password_internals(struct auth_method_context *ctx
 		return NT_STATUS_NO_MEMORY;
 	}
 
+#ifndef __REACTOS__
 	domain_dn = ldb_get_default_basedn(ctx->auth_ctx->sam_ctx);
 	if (domain_dn == NULL) {
 		talloc_free(tmp_ctx);
@@ -692,6 +737,11 @@ static NTSTATUS authsam_check_password_internals(struct auth_method_context *ctx
 		talloc_free(tmp_ctx);
 		return nt_status;
 	}
+#else
+    domain_dn = NULL;
+    msg = NULL;
+    D_WARNING("TODO authsam_check_password_internals - check user \n");
+#endif
 
 	nt_status = authsam_authenticate(ctx->auth_ctx, tmp_ctx, ctx->auth_ctx->sam_ctx, domain_dn, msg, user_info,
 					 &user_sess_key, &lm_sess_key, authoritative);
@@ -702,11 +752,19 @@ static NTSTATUS authsam_check_password_internals(struct auth_method_context *ctx
 
 	nt_status = authsam_make_user_info_dc(tmp_ctx, ctx->auth_ctx->sam_ctx,
 					     lpcfg_netbios_name(ctx->auth_ctx->lp_ctx),
+#ifndef __REACTOS__
 					     lpcfg_sam_name(ctx->auth_ctx->lp_ctx),
 					     lpcfg_sam_dnsname(ctx->auth_ctx->lp_ctx),
 					     domain_dn,
 					     msg,
 					     user_sess_key, lm_sess_key,
+#else
+					     "sam", //TODO lpcfg_sam_name(ctx->auth_ctx->lp_ctx),
+					     "samdns", //TODO  lpcfg_sam_dnsname(ctx->auth_ctx->lp_ctx),
+					     domain_dn, //TODO domain_dn,
+					     msg,// msg,
+					     user_sess_key, lm_sess_key,
+#endif
 					     user_info_dc);
 	if (!NT_STATUS_IS_OK(nt_status)) {
 		talloc_free(tmp_ctx);
@@ -719,6 +777,7 @@ static NTSTATUS authsam_check_password_internals(struct auth_method_context *ctx
 	return NT_STATUS_OK;
 }
 
+#ifndef __REACTOS__
 static NTSTATUS authsam_ignoredomain_want_check(struct auth_method_context *ctx,
 						TALLOC_CTX *mem_ctx,
 						const struct auth_usersupplied_info *user_info)
@@ -731,7 +790,6 @@ static NTSTATUS authsam_ignoredomain_want_check(struct auth_method_context *ctx,
 }
 #endif
 
-#ifndef __REACTOS__
 /****************************************************************************
 Check SAM security (above) but with a few extra checks.
 ****************************************************************************/
@@ -739,6 +797,7 @@ static NTSTATUS authsam_want_check(struct auth_method_context *ctx,
 				   TALLOC_CTX *mem_ctx,
 				   const struct auth_usersupplied_info *user_info)
 {
+#ifndef __REACTOS__
 	const char *effective_domain = user_info->mapped.domain_name;
 	bool is_local_name = false;
 	bool is_my_domain = false;
@@ -860,9 +919,9 @@ static NTSTATUS authsam_want_check(struct auth_method_context *ctx,
 	 * to check if it's in our domain.
 	 */
 	TALLOC_FREE(trt);
+#endif
 	return NT_STATUS_OK;
 }
-#endif
 
 #ifndef __REACTOS__
 /* Wrapper for the auth subsystem pointer */
@@ -893,8 +952,8 @@ static const struct auth_operations sam_ops = {
 #else
 static const struct auth_operations sam_ops = {
 	/*.name		           = */"sam",
-	/*.want_check	           = authsam_want_check, */
-	/*.check_password	           = authsam_check_password_internals,*/
+	/*.want_check	           = */authsam_want_check,
+	/*.check_password	           = */authsam_check_password_internals,
 	/*.get_user_info_dc_principal = authsam_get_user_info_dc_principal_wrapper,*/
     /*.flags = */0,
 };

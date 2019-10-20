@@ -38,7 +38,14 @@
 #include "param/loadparm.h"
 #include "libcli/security/session.h"
 #else
-#include "../../../smbincludes.h"
+#include "smbincludes.h"
+#include "samba/lib/crypto/hmacmd5.h"
+#include "samba/lib/util/samba_util.h"
+#include "samba/lib/util/tevent_ntstatus.h"
+#include "samba/lib/util/time_basic.h"
+#include "samba/lib/param/loadparm.h"
+#include "samba/libcli/auth/proto.h"
+#include "samba/libcli/security/session.h"
 #endif
 
 #ifndef __REACTOS__
@@ -304,7 +311,6 @@ NTSTATUS gensec_ntlmssp_server_negotiate(struct gensec_security *gensec_security
 	return NT_STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-#ifndef __REACTOS__
 struct ntlmssp_server_auth_state {
 	struct gensec_security *gensec_security;
 	struct gensec_ntlmssp_context *gensec_ntlmssp;
@@ -578,12 +584,21 @@ static NTSTATUS ntlmssp_server_preauth(struct gensec_security *gensec_security,
 					(ndr_pull_flags_fn_t)ndr_pull_NTLMv2_RESPONSE);
 		if (!NDR_ERR_CODE_IS_SUCCESS(err)) {
 			nt_status = ndr_map_error2ntstatus(err);
+            #ifndef __REACTOS__
 			DEBUG(1,("%s: failed to parse NTLMv2_RESPONSE of length %zu for "
 				 "user=[%s] domain=[%s] workstation=[%s] - %s %s\n",
 				 __func__, ntlmssp_state->nt_resp.length,
 				 ntlmssp_state->user, ntlmssp_state->domain,
 				 ntlmssp_state->client.netbios_name,
 				 ndr_errstr(err), nt_errstr(nt_status)));
+            #else
+			DEBUG(1,("%s: failed to parse NTLMv2_RESPONSE of length %u for "
+				 "user=[%s] domain=[%s] workstation=[%s] - %s %s\n",
+				 __func__, ntlmssp_state->nt_resp.length,
+				 ntlmssp_state->user, ntlmssp_state->domain,
+				 ntlmssp_state->client.netbios_name,
+				 ndr_errstr(err), nt_errstr(nt_status)));
+            #endif
 			return nt_status;
 		}
 
@@ -653,6 +668,7 @@ static NTSTATUS ntlmssp_server_preauth(struct gensec_security *gensec_security,
 			cp = ndr_ntlmssp_find_av(&v2_resp.Challenge.AvPairs,
 						 sp->AvId);
 			if (cp == NULL) {
+                #ifndef __REACTOS__
 				DEBUG(1,("%s: AvId 0x%x missing for"
 					 "user=[%s] domain=[%s] "
 					 "workstation=[%s]\n",
@@ -661,6 +677,16 @@ static NTSTATUS ntlmssp_server_preauth(struct gensec_security *gensec_security,
 					 ntlmssp_state->user,
 					 ntlmssp_state->domain,
 					 ntlmssp_state->client.netbios_name));
+                #else
+				DEBUG(1,("%s: AvId 0x%x missing for"
+					 "user=[%s] domain=[%s] "
+					 "workstation=[%s]\n",
+					 __FUNC__,
+					 (unsigned)sp->AvId,
+					 ntlmssp_state->user,
+					 ntlmssp_state->domain,
+					 ntlmssp_state->client.netbios_name));
+                #endif
 				return NT_STATUS_INVALID_PARAMETER;
 			}
 
@@ -713,6 +739,7 @@ static NTSTATUS ntlmssp_server_preauth(struct gensec_security *gensec_security,
 					nttime_to_timeval(&st,
 							  sp->Value.AvTimestamp);
 
+                    #ifndef __REACTOS__
 					DEBUG(1,("%s: invalid AvTimestamp "
 						 "got[%s] expect[%s] for "
 						 "user=[%s] domain=[%s] "
@@ -725,6 +752,20 @@ static NTSTATUS ntlmssp_server_preauth(struct gensec_security *gensec_security,
 						 ntlmssp_state->user,
 						 ntlmssp_state->domain,
 						 ntlmssp_state->client.netbios_name));
+                    #else
+					DEBUG(1,("%s: invalid AvTimestamp "
+						 "got[%s] expect[%s] for "
+						 "user=[%s] domain=[%s] "
+						 "workstation=[%s]\n",
+						 __FUNC__,
+						 timeval_str_buf(&ct, false,
+								 true, &tmp1),
+						 timeval_str_buf(&st, false,
+								 true, &tmp2),
+						 ntlmssp_state->user,
+						 ntlmssp_state->domain,
+						 ntlmssp_state->client.netbios_name));
+                    #endif
 					return NT_STATUS_INVALID_PARAMETER;
 				}
 				break;
@@ -768,8 +809,14 @@ static NTSTATUS ntlmssp_server_preauth(struct gensec_security *gensec_security,
 
 			MD5Init(&md5_session_nonce_ctx);
 			MD5Update(&md5_session_nonce_ctx, state->session_nonce, 16);
+            #ifndef __REACTOS__
 			MD5Final(session_nonce_hash, &md5_session_nonce_ctx);
-
+            #else
+			MD5FinalSMB(session_nonce_hash, &md5_session_nonce_ctx);
+            #endif
+#ifdef __REACTOS__
+    dump_data_pw("nonce hash ", session_nonce_hash, 16);
+#endif
 			/* LM response is no longer useful */
 			data_blob_free(&ntlmssp_state->lm_resp);
 
@@ -805,6 +852,7 @@ static NTSTATUS ntlmssp_server_preauth(struct gensec_security *gensec_security,
 	user_info->client.account_name = ntlmssp_state->user;
 	user_info->client.domain_name = ntlmssp_state->domain;
 	user_info->workstation_name = ntlmssp_state->client.netbios_name;
+#ifndef __REACTOS__
 	user_info->remote_host = gensec_get_remote_address(gensec_security);
 	user_info->local_host = gensec_get_local_address(gensec_security);
 	user_info->service_description
@@ -817,6 +865,9 @@ static NTSTATUS ntlmssp_server_preauth(struct gensec_security *gensec_security,
 	 * gensec_session_info() later
 	 */
 	user_info->auth_description = gensec_final_auth_type(gensec_security);
+#else
+    printf("TODO fill user_info %s\n", __location__);
+#endif
 
 	user_info->password_state = AUTH_PASSWORD_RESPONSE;
 	user_info->password.response.lanman = ntlmssp_state->lm_resp;
@@ -1125,4 +1176,3 @@ NTSTATUS ntlmssp_server_auth_recv(struct tevent_req *req,
 	return NT_STATUS_OK;
 }
 
-#endif // __REACTOS__

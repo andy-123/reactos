@@ -1,6 +1,8 @@
 #ifndef _SMBINCLUDES_H_
 #define _SMBINCLUDES_H_
 
+#define DEBUG_PASSWORD 1
+
 #include "stdint.h"
 #include "ntlmssp.h"
 #include "smbhelper.h"

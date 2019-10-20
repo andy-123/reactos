@@ -5,21 +5,28 @@
 #include "samba/lib/util/data_blob.h"
 #include "samba/librpc/ndr/libndr.h"
 #include "smbdefs.h"
+#include "ntstatus.h"
 
 /* types / functions from samba
  * for wich the samba file is not imported (yet).
  */
 
 //FIXME
-#define dump_data(a,b,c)
 #define debug_ntlmssp_flags(a)
 #define NDR_PRINT_DEBUG(a,b)
 #define smb_panic printf
-
+struct ldb_message {
+    char *msg;
+};
+struct ldb_dn {
+    char *msg;
+};
 
 /* implemented in ndr_basic.c
  * don't know in wich header it is defined */
 enum ndr_err_code ndr_pull_uint32(struct ndr_pull *ndr, int ndr_flags, uint32_t *v);
+enum ndr_err_code ndr_push_NTTIME(struct ndr_push *ndr, int ndr_flags, NTTIME t);
+
 
 /* samba: lib/util/fault.h */
 /**
@@ -38,6 +45,7 @@ do { \
 #define NT_STATUS(x) (x)
 #define NT_STATUS_V(x) (x)
 #define NT_STATUS_IS_OK(x) (/*likely*/(NT_STATUS_V(x) == 0))
+#define NT_STATUS_EQUAL(x,y) (NT_STATUS_V(x) == NT_STATUS_V(y))
 
 const char *nt_errstr_const(NTSTATUS nt_code);
 char *nt_errstr(NTSTATUS nt_code);
@@ -54,6 +62,15 @@ NTSTATUS map_nt_error_from_unix_common(int unix_error);
 		return NT_STATUS_NO_MEMORY;\
 	}\
 } while (0)
+
+
+
+/*samr.h: */
+struct samr_Password {
+	uint8_t hash[16];
+};/* [flag(LIBNDR_PRINT_ARRAY_HEX),public] */;
+/* auth/credentials/credentials_internal.h:	*/
+struct samr_Password *nt_hash;
 
 
 
@@ -88,6 +105,17 @@ bin/default/include/public/core/ntstatus_gen.h:#define NT_STATUS_INVALID_PARAMET
 bin/default/include/public/core/ntstatus_gen.h:#define NT_STATUS_INVALID_PARAMETER_12 NT_STATUS(0xc00000fa)*/
 #define NT_STATUS_OK			  NT_STATUS_SUCCESS
 
+/* TODO map status codes above
+ * #define <samba nt-status> <nt-status>*/
+#define NT_STATUS_IO_TIMEOUT      STATUS_IO_TIMEOUT
+#define NT_STATUS_NO_SUCH_USER    STATUS_NO_SUCH_USER
+#define NT_STATUS_NO_USER_SESSION_KEY STATUS_NO_USER_SESSION_KEY
+#define NT_STATUS_INVALID_PARAMETER_MIX STATUS_INVALID_PARAMETER
+#define NT_STATUS_WRONG_PASSWORD  STATUS_WRONG_PASSWORD
+#define NT_STATUS_NOT_FOUND       STATUS_NOT_FOUND
+#define NT_STATUS_NTLM_BLOCKED    NT_STATUS(0xc0000418)
+#define NT_STATUS_ACCESS_DENIED   STATUS_ACCESS_DENIED
+
 /*libcli/util/hresult.h*/
 #define HRES_ERROR(x) (x)
 #define HRES_ERROR_V(x) (x)
@@ -110,8 +138,21 @@ bin/default/include/public/core/ntstatus_gen.h:#define NT_STATUS_INVALID_PARAMET
 
 
 
+/* bin/default/include/public/gen_ndr/netlogon.h */
+#define MSV1_0_ALLOW_MSVCHAPV2 ( 0x00010000 )
+
+
+
 /*samba: bin/default/lib/param/param_functions.h */
-const char *lpcfg_workgroup(struct loadparm_context *);
+const char *lpcfg_workgroup(struct loadparm_context *x);
+const int lpcfg_map_to_guest(struct loadparm_context *x);
+const char *lpcfg_netbios_name(struct loadparm_context *x);
+const bool lpcfg_lanman_auth(struct loadparm_context *x);
+const enum ntlm_auth_level lpcfg_ntlm_auth(struct loadparm_context *x);
+const bool lpcfg_client_ntlmv2_auth(struct loadparm_context *x);
+const bool lpcfg_client_lanman_auth(struct loadparm_context *x);
+
+
 
 /* samba:librpc/ndr/libndr.h */
 /* structure passed to functions that print IDL structures */
@@ -144,6 +185,11 @@ enum server_role {
 
 
 
+/* samba: lib/util/util.c */
+void dump_data(int level, const uint8_t *buf, int len);
+
+
+
 /*?? not from samba - ??*/
 /* samba: lib/util/time.h: */
 //struct timeval_buf { char buf[128]; };
@@ -151,5 +197,30 @@ struct timeval timeval_current(void);
 struct timeval timeval_add(const struct timeval *tv,
 			   uint32_t secs, uint32_t usecs);
 NTTIME timeval_to_nttime(const struct timeval *tv);
+void nttime_to_timeval(struct timeval *tv, NTTIME t);
+bool timeval_expired(const struct timeval *tv);
+void push_nttime(uint8_t *base, uint16_t offset, NTTIME t);
+void push_nttime(uint8_t *base, uint16_t offset, NTTIME t);
+
+
+
+/* advapi32 */
+#define MD5_DIGEST_LENGTH 16
+/*typedef MD5_CTX AVMD5;
+void WINAPI MD5Init(MD5_CTX *ctx);
+void WINAPI MD5Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len);
+void WINAPI MD5Final(uint8_t digest[MD5_DIGEST_LENGTH], MD5_CTX *context);
+*/
+void WINAPI MD5FinalSMB(uint8_t digest[MD5_DIGEST_LENGTH], MD5_CTX *context);
+
+
+
+/* samba:lib/crypto/md4.h */
+void mdfour(uint8_t *out, const uint8_t *in, int n);
+
+
+
+/* misc */
+size_t strlcpy(char *destination, const char *source, size_t size);
 
 #endif

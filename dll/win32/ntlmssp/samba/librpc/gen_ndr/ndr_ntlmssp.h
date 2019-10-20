@@ -92,10 +92,14 @@ enum ndr_err_code ndr_pull_NTLMv2_RESPONSE(struct ndr_pull *ndr, int ndr_flags, 
 #ifndef __REACTOS__
 void ndr_print_NTLMv2_RESPONSE(struct ndr_print *ndr, const char *name, const struct NTLMv2_RESPONSE *r);
 enum ndr_err_code ndr_push_ntlmssp_NTLM_RESPONSE_with_len(struct ndr_push *ndr, int ndr_flags, const union ntlmssp_NTLM_RESPONSE_with_len *r);
+#endif
 enum ndr_err_code ndr_pull_ntlmssp_NTLM_RESPONSE_with_len(struct ndr_pull *ndr, int ndr_flags, union ntlmssp_NTLM_RESPONSE_with_len *r);
+#ifndef __REACTOS__
 void ndr_print_ntlmssp_NTLM_RESPONSE_with_len(struct ndr_print *ndr, const char *name, const union ntlmssp_NTLM_RESPONSE_with_len *r);
 enum ndr_err_code ndr_push_AUTHENTICATE_MESSAGE(struct ndr_push *ndr, int ndr_flags, const struct AUTHENTICATE_MESSAGE *r);
+#endif
 enum ndr_err_code ndr_pull_AUTHENTICATE_MESSAGE(struct ndr_pull *ndr, int ndr_flags, struct AUTHENTICATE_MESSAGE *r);
+#ifndef __REACTOS__
 void ndr_print_AUTHENTICATE_MESSAGE(struct ndr_print *ndr, const char *name, const struct AUTHENTICATE_MESSAGE *r);
 enum ndr_err_code ndr_push_NTLMSSP_MESSAGE_SIGNATURE(struct ndr_push *ndr, int ndr_flags, const struct NTLMSSP_MESSAGE_SIGNATURE *r);
 enum ndr_err_code ndr_pull_NTLMSSP_MESSAGE_SIGNATURE(struct ndr_pull *ndr, int ndr_flags, struct NTLMSSP_MESSAGE_SIGNATURE *r);
