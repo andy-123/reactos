@@ -24,6 +24,7 @@
 #include "ciphers.h"
 
 #ifdef USE_SAMBA
+#include "smbhelper.h"
 #include "smbincludes.h"
 #include "samba/source4/auth/auth.h"
 #include "samba/lib/param/loadparm.h"
@@ -92,6 +93,91 @@ CliGenerateNegotiateMessage(
     IN ULONG ISCContextReq,
     OUT PSecBuffer OutputToken)
 {
+    #ifdef USE_SAMBA
+    //SECURITY_STATUS ret;
+    NTSTATUS st;
+    DATA_BLOB dataIn, dataOut;
+    struct gensec_security *gs;
+    struct gensec_settings *settings;
+
+    if(!OutputToken)
+    {
+        ERR("No output token!\n");
+        return SEC_E_BUFFER_TOO_SMALL;
+    }
+
+    if(!(OutputToken->pvBuffer))
+    {
+        /* according to wine test */
+        ERR("No output buffer!\n");
+        return SEC_E_INTERNAL_ERROR;
+    }
+
+    printf("FIXME check if context->samba_gs = null / if not - reuse!\n");
+
+    /*evctx = tevent_context_init(ctx);
+    st = auth_context_create(ctx, evctx, NULL, NULL,
+                             &authctx);
+    if (!NT_STATUS_IS_OK(st))
+    {
+        ERR("auth_context_create_methods failed\n");
+        ret = SEC_E_INTERNAL_ERROR;
+        goto done;
+    }*/
+    settings = smbGetGensecSettigs();
+    st = gensec_client_start(NULL, &gs, settings);
+    if (!NT_STATUS_IS_OK(st))
+    {
+        ERR("gensec_client_start failed\n");
+        return SEC_E_INTERNAL_ERROR;
+    }
+
+    st = gensec_ntlmssp_client_start(gs);
+    if (!NT_STATUS_IS_OK(st))
+    {
+        ERR("gensec_client_start failed\n");
+        return SEC_E_INTERNAL_ERROR;
+    }
+
+    context->samba_gs =gs;
+
+    dataIn.length = 0;
+    dataIn.data = NULL;
+    st = ntlmssp_client_initial(gs, NULL, dataIn, &dataOut);
+    __debugbreak();
+
+    /* NT_STATUS_MORE_PROCESSING_REQUIRED is what we expect */
+    if ((st != NT_STATUS_OK) &&
+        (st != NT_STATUS_MORE_PROCESSING_REQUIRED))
+    {
+        ERR("ntlmssp_client_initial faield %x\n", st);
+        return SEC_E_INTERNAL_ERROR; //TODO be more specific
+    }
+
+    /* if should not allocate */
+    if (!(ISCContextReq & ISC_REQ_ALLOCATE_MEMORY))
+    {
+        /* not enough space */
+        if(dataOut.length > OutputToken->cbBuffer)
+            return SEC_E_BUFFER_TOO_SMALL;
+
+        OutputToken->cbBuffer = dataOut.length;
+        memcpy(OutputToken->pvBuffer, dataOut.data, dataOut.length);
+    }
+    else
+    {
+        /* allocate */
+        OutputToken->pvBuffer = NtlmAllocate(dataOut.length);
+        OutputToken->cbBuffer = dataOut.length;
+
+        if(!OutputToken->pvBuffer)
+            return SEC_E_INSUFFICIENT_MEMORY;
+
+        memcpy(OutputToken->pvBuffer, dataOut.data, dataOut.length);
+    }
+
+    return SEC_I_CONTINUE_NEEDED;
+    #else
     PNTLMSSP_CREDENTIAL cred = context->Credential;
     PNEGOTIATE_MESSAGE_X message;
     ULONG messageSize = 0;
@@ -180,6 +266,7 @@ CliGenerateNegotiateMessage(
     /* set state */
     context->hdr.State = NegotiateSent;
     return SEC_I_CONTINUE_NEEDED;
+    #endif
 }
 
 SECURITY_STATUS
@@ -470,15 +557,7 @@ SvrHandleNegotiateMessage(
 
     context = NtlmReferenceContextSvr(*phContext);
 
-    settings = talloc_zero(NULL, struct gensec_settings);
-
-    settings->lp_ctx = talloc_zero(NULL, struct loadparm_context);
-	settings->target_hostname = "targethost";
-    settings->backends = NULL;
-	settings->server_dns_domain = NULL;
-	settings->server_dns_name = NULL;
-	settings->server_netbios_domain = NULL;
-	settings->server_netbios_name = NULL;
+    settings = smbGetGensecSettigs();
 
     evctx = tevent_context_init(ctx);
     st = auth_context_create(ctx, evctx, NULL, NULL,

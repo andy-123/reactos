@@ -18,6 +18,7 @@
  */
 
 #include "ntlmssp.h"
+#include "smbhelper.h"
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
@@ -34,6 +35,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
         init_strutil(NtlmAllocate, NtlmFree);
+        NtlmInitializeSamba();
         NtlmInitializeGlobals();
         NtlmInitializeRNG();
         NtlmInitializeProtectedMemory();
@@ -46,6 +48,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         NtlmTerminateRNG();
         NtlmTerminateProtectedMemory();
         NtlmTerminateGlobals();
+        NtlmFinalizeSamba();
         break;
     default:
         break;

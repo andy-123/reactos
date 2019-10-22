@@ -190,6 +190,15 @@ void dump_data(int level, const uint8_t *buf, int len);
 
 
 
+/* auth/credentials/credentials.h: */
+struct cli_credentials
+{
+    int todo;
+};
+const char *cli_credentials_get_workstation(struct cli_credentials *cred);
+
+
+
 /*?? not from samba - ??*/
 /* samba: lib/util/time.h: */
 //struct timeval_buf { char buf[128]; };
@@ -222,5 +231,14 @@ void mdfour(uint8_t *out, const uint8_t *in, int n);
 
 /* misc */
 size_t strlcpy(char *destination, const char *source, size_t size);
+
+/* initilise gense_settings
+ * loaded from where it should be in real windows */
+struct gensec_settings* smbGetGensecSettigs();
+
+
+
+void NtlmInitializeSamba();
+void NtlmFinalizeSamba();
 
 #endif

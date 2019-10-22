@@ -265,6 +265,9 @@ typedef struct _NTLMSSP_CONTEXT_CLI
     /* extra flags (not directly in spec) */
     BOOL UseNTLMv2;
 
+    /* samba gs */
+    void* samba_gs;
+
 } NTLMSSP_CONTEXT_CLI, *PNTLMSSP_CONTEXT_CLI;
 
 typedef struct _NTLMSSP_CONTEXT_SVR

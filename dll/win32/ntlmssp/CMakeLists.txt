@@ -18,6 +18,7 @@ list(APPEND SOURCE
     samba/auth/gensec/gensec.c
     samba/auth/ntlmssp/gensec_ntlmssp.c
     samba/auth/ntlmssp/gensec_ntlmssp_server.c
+    samba/auth/ntlmssp/ntlmssp_client.c
     samba/auth/ntlmssp/ntlmssp_ndr.c
     samba/auth/ntlmssp/ntlmssp_server.c
     samba/auth/ntlmssp/ntlmssp_sign.c

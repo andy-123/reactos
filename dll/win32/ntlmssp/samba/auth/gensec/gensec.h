@@ -136,9 +136,11 @@ struct loadparm_context;
 NTSTATUS gensec_subcontext_start(TALLOC_CTX *mem_ctx,
 				 struct gensec_security *parent,
 				 struct gensec_security **gensec_security);
+#endif
 NTSTATUS gensec_client_start(TALLOC_CTX *mem_ctx,
 			     struct gensec_security **gensec_security,
 			     struct gensec_settings *settings);
+#ifndef __REACTOS__
 NTSTATUS gensec_start_mech_by_ops(struct gensec_security *gensec_security,
 				  const struct gensec_security_ops *ops);
 NTSTATUS gensec_start_mech_by_sasl_list(struct gensec_security *gensec_security,

@@ -23,6 +23,7 @@
 
 struct auth_session_info;
 
+#ifndef __REACTOS__
 #include "includes.h"
 #include "auth/ntlmssp/ntlmssp.h"
 #include "../lib/crypto/crypto.h"
@@ -35,6 +36,10 @@ struct auth_session_info;
 #include "../librpc/gen_ndr/ndr_ntlmssp.h"
 #include "../auth/ntlmssp/ntlmssp_ndr.h"
 #include "../nsswitch/libwbclient/wbclient.h"
+#else
+#include "smbincludes.h"
+#include "smbhelper.h"
+#endif
 
 #undef DBGC_CLASS
 #define DBGC_CLASS DBGC_AUTH
@@ -79,6 +84,7 @@ NTSTATUS ntlmssp_client_initial(struct gensec_security *gensec_security,
 		return status;
 	}
 
+    __debugbreak();
 	if (DEBUGLEVEL >= 10) {
 		struct NEGOTIATE_MESSAGE *negotiate = talloc(
 			ntlmssp_state, struct NEGOTIATE_MESSAGE);
@@ -104,6 +110,7 @@ NTSTATUS ntlmssp_client_initial(struct gensec_security *gensec_security,
 	return NT_STATUS_MORE_PROCESSING_REQUIRED;
 }
 
+#ifndef __REACTOS__
 NTSTATUS gensec_ntlmssp_resume_ccache(struct gensec_security *gensec_security,
 				TALLOC_CTX *out_mem_ctx,
 				DATA_BLOB in, DATA_BLOB *out)
@@ -778,6 +785,7 @@ done:
 	talloc_free(mem_ctx);
 	return NT_STATUS_OK;
 }
+#endif
 
 NTSTATUS gensec_ntlmssp_client_start(struct gensec_security *gensec_security)
 {
@@ -935,6 +943,7 @@ NTSTATUS gensec_ntlmssp_client_start(struct gensec_security *gensec_security)
 	return NT_STATUS_OK;
 }
 
+#ifndef __REACTOS__
 NTSTATUS gensec_ntlmssp_resume_ccache_start(struct gensec_security *gensec_security)
 {
 	struct gensec_ntlmssp_context *gensec_ntlmssp = NULL;
@@ -953,3 +962,4 @@ NTSTATUS gensec_ntlmssp_resume_ccache_start(struct gensec_security *gensec_secur
 
 	return NT_STATUS_OK;
 }
+#endif

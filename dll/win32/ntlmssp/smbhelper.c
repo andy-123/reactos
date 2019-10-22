@@ -1,5 +1,6 @@
 #include "smbincludes.h"
 #include "samba/libcli/auth/ntlm_check.h"
+#include "samba/lib/param/loadparm.h"
 
 struct loadparam_context;
 
@@ -164,6 +165,15 @@ void WINAPI MD5FinalSMB(uint8_t digest[MD5_DIGEST_LENGTH], MD5_CTX *context)
     memcpy(digest, context->digest, MD5_DIGEST_LENGTH);
 }
 
+/* auth/credentials/credentials.h: */
+const char *cli_credentials_get_workstation(struct cli_credentials *cred)
+{
+    //todo
+    D_WARNING("FIXME\n");
+    return NULL;
+}
+
+
 /* common_auth.h */
 void log_authentication_event(struct imessaging_context *msg_ctx,
 			      struct loadparm_context *lp_ctx,
@@ -199,4 +209,39 @@ size_t strlcpy(char *destination, const char *source, size_t size)
         size = sourcelen;
     destination[size] = 0;
     return size;
+}
+
+struct gensec_settings* gs = NULL;
+
+struct gensec_settings* smbGetGensecSettigs()
+{
+    if (gs == NULL)
+    {
+        gs = talloc_zero(NULL, struct gensec_settings);
+        gs->lp_ctx = talloc_zero(NULL, struct loadparm_context);
+
+        gs->target_hostname = "targethost";
+        gs->backends = NULL;
+        gs->server_dns_domain = NULL;
+        gs->server_dns_name = NULL;
+        gs->server_netbios_domain = NULL;
+        gs->server_netbios_name = NULL;
+    }
+
+    return gs;
+}
+
+void NtlmInitializeSamba()
+{
+    gs = NULL;
+}
+
+void NtlmFinalizeSamba()
+{
+    if (gs)
+    {
+        talloc_free(gs->lp_ctx);
+        talloc_free(gs);
+        gs = NULL;
+    }
 }

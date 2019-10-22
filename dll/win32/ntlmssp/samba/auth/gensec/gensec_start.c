@@ -652,6 +652,7 @@ _PUBLIC_ NTSTATUS gensec_child_ready(struct gensec_security *parent,
 	child->parent_security = parent;
 	return NT_STATUS_OK;
 }
+#endif
 
 /**
   Start the GENSEC system, in client mode, returning a context pointer.
@@ -678,7 +679,6 @@ _PUBLIC_ NTSTATUS gensec_client_start(TALLOC_CTX *mem_ctx,
 
 	return status;
 }
-#endif
 
 
 

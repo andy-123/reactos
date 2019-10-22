@@ -335,18 +335,15 @@ _PUBLIC_ enum ndr_err_code ndr_push_NEGOTIATE_MESSAGE(struct ndr_push *ndr, int 
 _PUBLIC_ enum ndr_err_code ndr_pull_NEGOTIATE_MESSAGE(struct ndr_pull *ndr, int ndr_flags, struct NEGOTIATE_MESSAGE *r)
 {
 	uint32_t size_Signature_0 = 0;
-#ifndef __REACTOS__
 	uint32_t _ptr_DomainName;
 	TALLOC_CTX *_mem_save_DomainName_0 = NULL;
 	uint32_t _ptr_Workstation;
 	TALLOC_CTX *_mem_save_Workstation_0 = NULL;
-#endif
 	NDR_PULL_CHECK_FLAGS(ndr, ndr_flags);
 	if (ndr_flags & NDR_SCALARS) {
 		NDR_CHECK(ndr_pull_align(ndr, 5));
 		size_Signature_0 = 8;
 		NDR_CHECK(ndr_pull_charset(ndr, NDR_SCALARS, &r->Signature, size_Signature_0, sizeof(uint8_t), CH_DOS));
-#ifndef __REACTOS__
 		NDR_CHECK(ndr_pull_ntlmssp_MessageType(ndr, NDR_SCALARS, &r->MessageType));
 		NDR_CHECK(ndr_pull_NEGOTIATE(ndr, NDR_SCALARS, &r->NegotiateFlags));
 		NDR_CHECK(ndr_pull_uint16(ndr, NDR_SCALARS, &r->DomainNameLen));
@@ -380,11 +377,7 @@ _PUBLIC_ enum ndr_err_code ndr_pull_NEGOTIATE_MESSAGE(struct ndr_pull *ndr, int 
 		NDR_CHECK(ndr_pull_set_switch_value(ndr, &r->Version, r->NegotiateFlags & NTLMSSP_NEGOTIATE_VERSION));
 		NDR_CHECK(ndr_pull_ntlmssp_Version(ndr, NDR_SCALARS, &r->Version));
 		NDR_CHECK(ndr_pull_trailer_align(ndr, 5));
-#else
-    D_ERR("fixme\n");
-#endif
 	}
-#ifndef __REACTOS__
 	if (ndr_flags & NDR_BUFFERS) {
 		{
 			uint32_t _flags_save_string = ndr->flags;
@@ -434,9 +427,6 @@ _PUBLIC_ enum ndr_err_code ndr_pull_NEGOTIATE_MESSAGE(struct ndr_pull *ndr, int 
 		}
 		NDR_CHECK(ndr_pull_ntlmssp_Version(ndr, NDR_BUFFERS, &r->Version));
 	}
-#else
-    D_ERR("fixme\n");
-#endif
 	return NDR_ERR_SUCCESS;
 }
 
