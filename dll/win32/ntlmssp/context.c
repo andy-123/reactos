@@ -436,6 +436,8 @@ CliCreateContext(
             return SEC_E_INTERNAL_ERROR;
         }
 
+        gssec->want_features = GENSEC_FEATURE_SEAL |
+                               GENSEC_FEATURE_SIGN;
 
         gscred = talloc_zero(gssec, struct cli_credentials);
         gscred->username = talloc_ExtWStrDup(gscred, &cred->UserNameW);
