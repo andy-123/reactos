@@ -64,7 +64,13 @@ static bool smb_pwd_check_ntlmv1(TALLOC_CTX *mem_ctx,
 		return false;
 	}
 
+        printf("nt part pass\n");
+        NtlmPrintHexDump((UCHAR*)part_passwd, 16);
+        printf("nt part sec_blob\n");
+        NtlmPrintHexDump(sec_blob->data, sec_blob->length);
 	SMBOWFencrypt(part_passwd, sec_blob->data, p24);
+        printf("nt hash\n");
+        NtlmPrintHexDump(p24, 24);
 
 #if DEBUG_PASSWORD
 	DEBUG(100,("Part password (P16) was |\n"));

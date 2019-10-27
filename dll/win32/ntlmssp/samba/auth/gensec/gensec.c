@@ -636,6 +636,7 @@ _PUBLIC_ NTSTATUS gensec_set_target_service(struct gensec_security *gensec_secur
 	}
 	return NT_STATUS_OK;
 }
+#endif
 
 _PUBLIC_ const char *gensec_get_target_service(struct gensec_security *gensec_security)
 {
@@ -646,6 +647,7 @@ _PUBLIC_ const char *gensec_get_target_service(struct gensec_security *gensec_se
 	return "host";
 }
 
+#ifndef __REACTOS__
 /**
  * Set the target service (such as 'samr') on an GENSEC context - ensures it is talloc()ed.
  *
@@ -687,6 +689,7 @@ _PUBLIC_ NTSTATUS gensec_set_target_hostname(struct gensec_security *gensec_secu
 	}
 	return NT_STATUS_OK;
 }
+#endif
 
 _PUBLIC_ const char *gensec_get_target_hostname(struct gensec_security *gensec_security)
 {
@@ -705,6 +708,7 @@ _PUBLIC_ const char *gensec_get_target_hostname(struct gensec_security *gensec_s
 	return NULL;
 }
 
+#ifndef __REACTOS__
 /**
  * Set (and copy) local and peer socket addresses onto a socket
  * context on the GENSEC context.

@@ -86,10 +86,12 @@ char *sess_decrypt_string(TALLOC_CTX *mem_ctx,
 DATA_BLOB sess_encrypt_blob(TALLOC_CTX *mem_ctx, DATA_BLOB *blob_in, const DATA_BLOB *session_key);
 NTSTATUS sess_decrypt_blob(TALLOC_CTX *mem_ctx, const DATA_BLOB *blob, const DATA_BLOB *session_key, 
 			   DATA_BLOB *ret);
+#endif
 
 /* The following definitions come from /home/jeremy/src/samba/git/master/source3/../source4/../libcli/auth/smbencrypt.c  */
 
 void SMBencrypt_hash(const uint8_t lm_hash[16], const uint8_t *c8, uint8_t p24[24]);
+#ifndef __REACTOS__
 bool SMBencrypt(const char *passwd, const uint8_t *c8, uint8_t p24[24]);
 #endif
 

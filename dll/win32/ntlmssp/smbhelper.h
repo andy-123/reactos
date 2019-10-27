@@ -48,7 +48,7 @@ do { \
 #define NT_STATUS_EQUAL(x,y) (NT_STATUS_V(x) == NT_STATUS_V(y))
 
 const char *nt_errstr_const(NTSTATUS nt_code);
-char *nt_errstr(NTSTATUS nt_code);
+const char *nt_errstr(NTSTATUS nt_code);
 
 
 /* bin/default/include/public/core/error.h */
@@ -115,6 +115,9 @@ bin/default/include/public/core/ntstatus_gen.h:#define NT_STATUS_INVALID_PARAMET
 #define NT_STATUS_NOT_FOUND       STATUS_NOT_FOUND
 #define NT_STATUS_NTLM_BLOCKED    NT_STATUS(0xc0000418)
 #define NT_STATUS_ACCESS_DENIED   STATUS_ACCESS_DENIED
+#define NT_STATUS_BUFFER_TOO_SMALL STATUS_BUFFER_TOO_SMALL
+#define NT_STATUS_ARRAY_BOUNDS_EXCEEDED STATUS_ARRAY_BOUNDS_EXCEEDED
+#define NT_STATUS_PORT_MESSAGE_TOO_LONG STATUS_PORT_MESSAGE_TOO_LONG
 
 /*libcli/util/hresult.h*/
 #define HRES_ERROR(x) (x)
@@ -190,15 +193,6 @@ void dump_data(int level, const uint8_t *buf, int len);
 
 
 
-/* auth/credentials/credentials.h: */
-struct cli_credentials
-{
-    int todo;
-};
-const char *cli_credentials_get_workstation(struct cli_credentials *cred);
-
-
-
 /*?? not from samba - ??*/
 /* samba: lib/util/time.h: */
 //struct timeval_buf { char buf[128]; };
@@ -237,6 +231,20 @@ size_t strlcpy(char *destination, const char *source, size_t size);
 struct gensec_settings* smbGetGensecSettigs();
 
 
+/* copy a smb DATA_BLOB to SecBuffer */
+SECURITY_STATUS
+CopySmbBlobToSecBuffer(
+    ULONG ISCContextReq,
+    PULONG ISCAttribRet,
+    IN DATA_BLOB* blob,
+    OUT PSecBuffer buffer);
+
+/* talloc-strdup for EXT_STRINGs */
+char *talloc_ExtWStrDup(const void *t, PEXT_STRING_W str);
+
+/* map (smb) NTSTATUS to SECURITY_STATUS */
+SECURITY_STATUS
+error_nt2sec(NTSTATUS st);
 
 void NtlmInitializeSamba();
 void NtlmFinalizeSamba();

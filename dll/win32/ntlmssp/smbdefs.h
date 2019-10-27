@@ -41,7 +41,8 @@ typedef int bool;
 typedef int (*__compar_fn_t) (const void *, const void *);
 typedef __compar_fn_t comparison_fn_t;
 
-typedef size_t ssize_t;
+/* we need a unsinged int to pass -1, this is done at some places */
+typedef int ssize_t;
 
 /* solves linking error ... not found in lib ... */
 int __strnlen(const char *s, size_t n);

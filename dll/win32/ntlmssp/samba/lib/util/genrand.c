@@ -71,7 +71,6 @@ _PUBLIC_ void generate_random_buffer(uint8_t *out, int len)
 #endif
 }
 
-#ifndef __REACTOS__
 /*
  * Keep generate_secret_buffer in case we ever want to do something
  * different
@@ -80,4 +79,3 @@ _PUBLIC_ void generate_secret_buffer(uint8_t *out, int len)
 {
 	generate_random_buffer(out, len);
 }
-#endif

@@ -94,11 +94,11 @@ CliGenerateNegotiateMessage(
     OUT PSecBuffer OutputToken)
 {
     #ifdef USE_SAMBA
-    //SECURITY_STATUS ret;
+    SECURITY_STATUS ret;
     NTSTATUS st;
     DATA_BLOB dataIn, dataOut;
+    ULONG dummyAttr;//FIxME ... return
     struct gensec_security *gs;
-    struct gensec_settings *settings;
 
     if(!OutputToken)
     {
@@ -124,11 +124,10 @@ CliGenerateNegotiateMessage(
         ret = SEC_E_INTERNAL_ERROR;
         goto done;
     }*/
-    settings = smbGetGensecSettigs();
-    st = gensec_client_start(NULL, &gs, settings);
-    if (!NT_STATUS_IS_OK(st))
+    gs = context->samba_gs;
+    if (!gs)
     {
-        ERR("gensec_client_start failed\n");
+        ERR("gs is NULL\n");
         return SEC_E_INTERNAL_ERROR;
     }
 
@@ -139,12 +138,10 @@ CliGenerateNegotiateMessage(
         return SEC_E_INTERNAL_ERROR;
     }
 
-    context->samba_gs =gs;
 
     dataIn.length = 0;
     dataIn.data = NULL;
     st = ntlmssp_client_initial(gs, NULL, dataIn, &dataOut);
-    __debugbreak();
 
     /* NT_STATUS_MORE_PROCESSING_REQUIRED is what we expect */
     if ((st != NT_STATUS_OK) &&
@@ -154,29 +151,15 @@ CliGenerateNegotiateMessage(
         return SEC_E_INTERNAL_ERROR; //TODO be more specific
     }
 
-    /* if should not allocate */
-    if (!(ISCContextReq & ISC_REQ_ALLOCATE_MEMORY))
+    st = CopySmbBlobToSecBuffer(ISCContextReq, &dummyAttr, &dataOut, OutputToken);
+    if (!NT_STATUS_IS_OK(st))
     {
-        /* not enough space */
-        if(dataOut.length > OutputToken->cbBuffer)
-            return SEC_E_BUFFER_TOO_SMALL;
-
-        OutputToken->cbBuffer = dataOut.length;
-        memcpy(OutputToken->pvBuffer, dataOut.data, dataOut.length);
+        ERR("CopySmbBlobToSecBuffer faield %x\n", st);
+        return SEC_E_INTERNAL_ERROR; //TODO be more specific
     }
-    else
-    {
-        /* allocate */
-        OutputToken->pvBuffer = NtlmAllocate(dataOut.length);
-        OutputToken->cbBuffer = dataOut.length;
-
-        if(!OutputToken->pvBuffer)
-            return SEC_E_INSUFFICIENT_MEMORY;
-
-        memcpy(OutputToken->pvBuffer, dataOut.data, dataOut.length);
-    }
-
-    return SEC_I_CONTINUE_NEEDED;
+    
+    ret = SEC_I_CONTINUE_NEEDED;
+    return ret;
     #else
     PNTLMSSP_CREDENTIAL cred = context->Credential;
     PNEGOTIATE_MESSAGE_X message;
@@ -462,7 +445,7 @@ SvrGenerateChallengeMessage(
     {
         if (OutputToken->cbBuffer < messageSize)
         {
-            ret =  SEC_E_BUFFER_TOO_SMALL;
+            ret = SEC_E_BUFFER_TOO_SMALL;
             goto done;
         }
     }
@@ -528,6 +511,7 @@ SvrHandleNegotiateMessage(
 #ifdef USE_SAMBA
 {
     SECURITY_STATUS ret;
+    PNTLMSSP_CREDENTIAL cred = NULL;
 
     struct gensec_security *gs;
     struct gensec_settings *settings;
@@ -554,8 +538,21 @@ SvrHandleNegotiateMessage(
 
         TRACE("NtlmHandleNegotiateMessage NEW hContext %lx\n", *phContext);
     }
-
     context = NtlmReferenceContextSvr(*phContext);
+
+    /* get credentials */
+    if (!(cred = NtlmReferenceCredential(hCredential)))
+    {
+        ERR("failed to get credentials!\n");
+        ret = SEC_E_INVALID_TOKEN;
+        goto done;
+    }
+    /* must be an incomming request */
+    if(!(cred->UseFlags & SECPKG_CRED_INBOUND))
+    {
+        ret = SEC_E_UNSUPPORTED_FUNCTION;
+        goto done;
+    }
 
     settings = smbGetGensecSettigs();
 
@@ -628,12 +625,14 @@ SvrHandleNegotiateMessage(
     //convert_string_talloc(NULL, 0,0,NULL,0,NULL,NULL);
 
     //talloc_free(gsctx);
-    talloc_free(&settings->lp_ctx);
-    talloc_free(settings);
+    //talloc_free(&settings->lp_ctx);
+    //talloc_free(settings);
 
 done:
     if (context)
         NtlmDereferenceContext((ULONG_PTR)context);
+    if (cred)
+        NtlmDereferenceCredential((ULONG_PTR)cred);
     return ret;
 }
 
@@ -879,6 +878,41 @@ CliGenerateAuthenticationMessage(
     OUT PULONG pISCContextAttr,
     OUT PTimeStamp ptsExpiry)
 {
+    #ifdef USE_SAMBA
+    SECURITY_STATUS ret = SEC_E_OK;
+    NTSTATUS st;
+    PNTLMSSP_CONTEXT_CLI context;
+    struct gensec_security *gs;
+    DATA_BLOB dataIn, dataOut;
+
+    /* get context */
+    context = NtlmReferenceContextCli(hContext);
+    //?? if (!context || !context->Credential)
+    if (!context)
+    {
+        ERR("CliGenerateAuthenticationMessage invalid context!\n");
+        ret = SEC_E_INVALID_HANDLE;
+        goto done;
+    }
+
+    gs = context->samba_gs;
+
+    dataIn.data = InputToken1->pvBuffer;
+    dataIn.length = InputToken1->cbBuffer;
+
+    st = ntlmssp_client_challenge(gs, NULL, dataIn, &dataOut);
+    if (!NT_STATUS_IS_OK(st))
+    {
+        ERR("ntlmssp_client_challenge failed 0x%x\n", st);
+        return SEC_E_INTERNAL_ERROR;
+    }
+
+    ret = CopySmbBlobToSecBuffer(ISCContextReq, pISCContextAttr, &dataOut, OutputToken1);
+done:
+    if (context)
+        NtlmDereferenceContext((ULONG_PTR)context);
+    return ret;
+    #else
     SECURITY_STATUS ret = SEC_E_OK;
     PNTLMSSP_CONTEXT_CLI context = NULL;
     PCHALLENGE_MESSAGE_X challenge = NULL;
@@ -1345,6 +1379,7 @@ quit:
     ExtStrFree(&WorkstationName);
     ERR("handle challenge end\n");
     return ret;
+    #endif
 }
 
 

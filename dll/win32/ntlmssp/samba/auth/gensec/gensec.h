@@ -54,13 +54,13 @@ enum gensec_priority {
 };
 
 struct gensec_security;
+#endif
 struct gensec_target {
 	const char *principal;
 	const char *hostname;
 	const char *service;
 	const char *service_description;
 };
-#endif
 
 #define GENSEC_FEATURE_SESSION_KEY	0x00000001
 #define GENSEC_FEATURE_SIGN		0x00000002
@@ -220,9 +220,13 @@ NTSTATUS gensec_set_credentials(struct gensec_security *gensec_security, struct 
  */
 
 NTSTATUS gensec_set_target_service(struct gensec_security *gensec_security, const char *service);
+#endif
 const char *gensec_get_target_service(struct gensec_security *gensec_security);
+#ifndef __REACTOS__
 NTSTATUS gensec_set_target_hostname(struct gensec_security *gensec_security, const char *hostname);
+#endif
 const char *gensec_get_target_hostname(struct gensec_security *gensec_security);
+#ifndef __REACTOS__
 /**
  * Set the target service (such as 'samr') on an GENSEC context - ensures it is talloc()ed.
  *

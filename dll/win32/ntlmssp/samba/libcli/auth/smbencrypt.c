@@ -38,7 +38,6 @@
 #include "samba/lib/util/talloc_stack.h"
 #endif
 
-#ifndef __REACTOS__
 void SMBencrypt_hash(const uint8_t lm_hash[16], const uint8_t *c8, uint8_t p24[24])
 {
 	uint8_t p21[21];
@@ -56,6 +55,7 @@ void SMBencrypt_hash(const uint8_t lm_hash[16], const uint8_t *c8, uint8_t p24[2
 #endif
 }
 
+#ifndef __REACTOS__
 /*
    This implements the X/Open SMB password encryption
    It takes a password ('unix' string), a 8 byte "crypt key"

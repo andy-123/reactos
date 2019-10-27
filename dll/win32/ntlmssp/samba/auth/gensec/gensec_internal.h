@@ -104,9 +104,7 @@ struct gensec_security {
 	const struct gensec_security_ops *ops;
 	void *private_data;
 	struct cli_credentials *credentials;
-#ifndef __REACTOS__
 	struct gensec_target target;
-#endif
 	enum gensec_role gensec_role;
 #ifndef __REACTOS__
 	bool subcontext;

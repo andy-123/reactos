@@ -17,8 +17,15 @@
  *
  */
 
+#define USE_SAMBA
+
 #include "ntlmssp.h"
 #include "protocol.h"
+#include "smbhelper.h"
+#include "samba/lib/talloc/talloc.h"
+#include "samba/auth/gensec/gensec.h"
+#include "samba/auth/gensec/gensec_internal.h"
+#include "samba/auth/credentials/credentials_internal.h"
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
@@ -412,6 +419,47 @@ CliCreateContext(
     ValidateNegFlg(gcli->ClientConfigFlags, &context->NegFlg, TRUE, FALSE);
 
     context->Credential = cred;
+
+    #ifdef USE_SAMBA
+    {
+        struct gensec_settings *gssettings;
+        struct gensec_security *gssec;
+        struct cli_credentials *gscred;
+        NTSTATUS st;
+
+        gssettings = smbGetGensecSettigs();
+
+        st = gensec_client_start(NULL, &gssec, gssettings);
+        if (!NT_STATUS_IS_OK(st))
+        {
+            ERR("gensec_client_start failed\n");
+            return SEC_E_INTERNAL_ERROR;
+        }
+
+
+        gscred = talloc_zero(gssec, struct cli_credentials);
+        gscred->username = talloc_ExtWStrDup(gscred, &cred->UserNameW);
+        gscred->password = talloc_ExtWStrDup(gscred, &cred->PasswordW);
+        gscred->domain = talloc_ExtWStrDup(gscred, &cred->DomainNameW);
+        gscred->workstation = talloc_strdup(gscred, "WORKSTATION");
+        gscred->nt_hash = talloc(gscred, struct samr_Password);
+        NtlmUnProtectMemory(cred->PasswordW.Buffer, cred->PasswordW.bUsed);
+        NTOWFv1((WCHAR*)cred->PasswordW.Buffer, (UCHAR*)gscred->nt_hash->hash);
+        NtlmProtectMemory(cred->PasswordW.Buffer, cred->PasswordW.bUsed);
+
+        printf("password\n");
+        NtlmUnProtectMemory(cred->PasswordW.Buffer, cred->PasswordW.bUsed);
+        printf("%S\n", (WCHAR*)cred->PasswordW.Buffer);
+        NtlmProtectMemory(cred->PasswordW.Buffer, cred->PasswordW.bUsed);
+        printf("nt hash\n");
+        NtlmPrintHexDump(gscred->nt_hash->hash, 16);
+
+        gssec->credentials = gscred;
+
+        context->samba_gs = gssec;
+    }
+    #endif
+
     //*ptsExpiry = 
     *pNewContext = context;
 

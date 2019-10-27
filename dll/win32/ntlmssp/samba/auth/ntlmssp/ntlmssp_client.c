@@ -39,6 +39,12 @@ struct auth_session_info;
 #else
 #include "smbincludes.h"
 #include "smbhelper.h"
+#include "protocol.h"
+#include "samba/auth/credentials/credentials.h"
+#include "samba/libcli/auth/proto.h"
+#include "samba/lib/crypto/hmacmd5.h"
+#include "samba/lib/util/genrand.h"
+#include "samba/lib/util/samba_util.h"
 #endif
 
 #undef DBGC_CLASS
@@ -84,7 +90,6 @@ NTSTATUS ntlmssp_client_initial(struct gensec_security *gensec_security,
 		return status;
 	}
 
-    __debugbreak();
 	if (DEBUGLEVEL >= 10) {
 		struct NEGOTIATE_MESSAGE *negotiate = talloc(
 			ntlmssp_state, struct NEGOTIATE_MESSAGE);
@@ -215,6 +220,7 @@ NTSTATUS gensec_ntlmssp_resume_ccache(struct gensec_security *gensec_security,
 
 	return NT_STATUS_MORE_PROCESSING_REQUIRED;
 }
+#endif
 
 /**
  * Next state function for the Challenge Packet.  Generate an auth packet.
@@ -425,6 +431,7 @@ NTSTATUS ntlmssp_client_challenge(struct gensec_security *gensec_security,
 		}
 	}
 
+#ifndef __REACTOS__
 	if (ntlmssp_state->use_ccache) {
 		struct wbcCredentialCacheParams params;
 		struct wbcCredentialCacheInfo *info = NULL;
@@ -492,6 +499,10 @@ NTSTATUS ntlmssp_client_challenge(struct gensec_security *gensec_security,
 		wbcFreeMemory(info);
 		goto done;
 	}
+    #else
+    D_WARNING("FIXME");
+    if (1 == 2) goto done;
+    #endif
 
 	if (ntlmssp_state->neg_flags & NTLMSSP_NEGOTIATE_NTLM2) {
 		flags |= CLI_CRED_NTLM2;
@@ -785,7 +796,6 @@ done:
 	talloc_free(mem_ctx);
 	return NT_STATUS_OK;
 }
-#endif
 
 NTSTATUS gensec_ntlmssp_client_start(struct gensec_security *gensec_security)
 {

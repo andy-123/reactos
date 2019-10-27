@@ -14,6 +14,7 @@ list(APPEND SOURCE
 	ntlmssp.c
 	protocol.c
     smbhelper.c
+    samba/auth/credentials/credentials_ntlm.c
     samba/auth/gensec/gensec_start.c
     samba/auth/gensec/gensec.c
     samba/auth/ntlmssp/gensec_ntlmssp.c
@@ -28,6 +29,7 @@ list(APPEND SOURCE
     samba/libcli/auth/smbdes.c
     samba/libcli/auth/smbencrypt.c
     samba/libcli/security/session.c
+    samba/libcli/util/nterr.c
     samba/librpc/ndr/ndr.c
     samba/librpc/ndr/ndr_basic.c
     samba/librpc/ndr/ndr_ntlmssp.c

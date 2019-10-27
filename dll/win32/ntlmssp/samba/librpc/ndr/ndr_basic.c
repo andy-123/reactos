@@ -1437,6 +1437,7 @@ _PUBLIC_ void ndr_print_bool(struct ndr_print *ndr, const char *name, const bool
 {
 	ndr->print(ndr, "%-25s: %s", name, b?"true":"false");
 }
+#endif
 
 _PUBLIC_ NTSTATUS ndr_map_error2ntstatus(enum ndr_err_code ndr_err)
 {
@@ -1463,6 +1464,7 @@ _PUBLIC_ NTSTATUS ndr_map_error2ntstatus(enum ndr_err_code ndr_err)
 	return NT_STATUS_INVALID_PARAMETER;
 }
 
+#ifndef __REACTOS__
 _PUBLIC_ int ndr_map_error2errno(enum ndr_err_code ndr_err)
 {
 	switch (ndr_err) {

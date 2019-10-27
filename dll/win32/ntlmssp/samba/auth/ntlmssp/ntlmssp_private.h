@@ -96,6 +96,7 @@ NTSTATUS ntlmssp_client_initial(struct gensec_security *gensec_security,
 NTSTATUS gensec_ntlmssp_resume_ccache(struct gensec_security *gensec_security,
 				TALLOC_CTX *out_mem_ctx,
 				DATA_BLOB in, DATA_BLOB *out);
+#endif
 
 /**
  * Next state function for the Challenge Packet.  Generate an auth packet.
@@ -109,7 +110,6 @@ NTSTATUS gensec_ntlmssp_resume_ccache(struct gensec_security *gensec_security,
 NTSTATUS ntlmssp_client_challenge(struct gensec_security *gensec_security,
 				  TALLOC_CTX *out_mem_ctx,
 				  const DATA_BLOB in, DATA_BLOB *out) ;
-#endif
 NTSTATUS gensec_ntlmssp_client_start(struct gensec_security *gensec_security);
 #ifndef __REACTOS__
 NTSTATUS gensec_ntlmssp_resume_ccache_start(struct gensec_security *gensec_security);

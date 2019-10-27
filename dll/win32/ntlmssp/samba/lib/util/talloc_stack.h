@@ -47,7 +47,13 @@
  * not explicitly freed.
  */
 
+#ifndef __REACTOS__
 #define talloc_stackframe() _talloc_stackframe(__location__)
+#else
+/* redirect to talloc_new */
+#define talloc_stackframe() talloc_new(NULL)
+#endif
+#ifndef __REACTOS__
 #define talloc_stackframe_pool(sz) _talloc_stackframe_pool(__location__, (sz))
 TALLOC_CTX *_talloc_stackframe(const char *location);
 TALLOC_CTX *_talloc_stackframe_pool(const char *location, size_t poolsize);
@@ -66,5 +72,6 @@ TALLOC_CTX *_talloc_tos(const char *location);
  */
 
 bool talloc_stackframe_exists(void);
+#endif
 
 #endif

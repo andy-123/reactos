@@ -77,12 +77,13 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
 				                           struct gensec_ntlmssp_context);
     state = gensec_ntlmssp->ntlmssp_state;
 
+__debugbreak();
     st = ntlmssp_seal_packet(state, NULL,
                              data_buffer->pvBuffer, data_buffer->cbBuffer,
                              data_buffer->pvBuffer, data_buffer->cbBuffer,
                              &sig);
     if (!NT_STATUS_IS_OK(st))
-        return SEC_E_INTERNAL_ERROR;//??
+        return error_nt2sec(st);
 
     if (signature_buffer->cbBuffer < sig.length)
         return SEC_E_INSUFFICIENT_MEMORY;
