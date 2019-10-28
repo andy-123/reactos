@@ -86,7 +86,6 @@ static NTSTATUS ntlmssp_make_packet_signature(struct ntlmssp_state *ntlmssp_stat
 					      enum ntlmssp_direction direction,
 					      DATA_BLOB *sig, bool encrypt_sig)
 {
-    __debugbreak();
 	if (ntlmssp_state->neg_flags & NTLMSSP_NEGOTIATE_NTLM2) {
 		HMACMD5Context ctx;
 		uint8_t digest[16];

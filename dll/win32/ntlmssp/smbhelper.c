@@ -187,7 +187,6 @@ const char *cli_credentials_get_password(struct cli_credentials *cred)
 struct samr_Password *cli_credentials_get_nt_hash(struct cli_credentials *cred,
 						  TALLOC_CTX *mem_ctx)
 {
-    __debugbreak();
     return talloc_memdup(mem_ctx, cred->nt_hash, sizeof(*(cred->nt_hash)));
 }
 

@@ -1038,7 +1038,6 @@ bool gensec_setting_bool(struct gensec_settings *settings, const char *mechanism
             return true;
         else
         {
-            __debugbreak();
             D_WARNING("using default value for %s/%s\n", mechanism, name);
         }
     }
@@ -1066,13 +1065,11 @@ bool gensec_setting_bool(struct gensec_settings *settings, const char *mechanism
             return true;
         else
         {
-            __debugbreak();
             D_WARNING("using default value for %s/%s\n", mechanism, name);
         }
     }
     else
     {
-        __debugbreak();
         D_WARNING("using default value for %s/%s\n", mechanism, name);
     }
     /* default */
