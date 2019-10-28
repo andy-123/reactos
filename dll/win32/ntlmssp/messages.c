@@ -35,7 +35,7 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
 {
     #ifdef USE_SAMBA
 
-    PNTLMSSP_CONTEXT_SVR ctx;
+    PNTLMSSP_CONTEXT_HDR ctx;
     PSecBuffer data_buffer = NULL;
     PSecBuffer signature_buffer = NULL;
     int index;
@@ -53,7 +53,7 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
     if(!phContext)
         return SEC_E_INVALID_HANDLE;
 
-    ctx = NtlmReferenceContextSvr(phContext->dwLower);
+    ctx = NtlmReferenceContextHdr(phContext->dwLower);
     if (!ctx)
     {
         ERR("no context\n");
@@ -61,6 +61,7 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
     }
 
     TRACE("pMessage->cBuffers %d\n", pMessage->cBuffers);
+
     /* extract data and signature buffers */
     for (index = 0; index < (int) pMessage->cBuffers; index++)
     {
@@ -77,7 +78,6 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
 				                           struct gensec_ntlmssp_context);
     state = gensec_ntlmssp->ntlmssp_state;
 
-__debugbreak();
     st = ntlmssp_seal_packet(state, NULL,
                              data_buffer->pvBuffer, data_buffer->cbBuffer,
                              data_buffer->pvBuffer, data_buffer->cbBuffer,
@@ -185,6 +185,58 @@ exit:
 SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
         PSecBufferDesc pMessage, ULONG MessageSeqNo, PULONG pfQOP)
 {
+    #ifdef USE_SAMBA
+    PNTLMSSP_CONTEXT_HDR ctx;
+    PSecBuffer data_buffer = NULL;
+    PSecBuffer signature_buffer = NULL;
+    int index;
+    NTSTATUS st;
+    DATA_BLOB sig;
+    struct gensec_security *gs;
+    struct ntlmssp_state *state;
+    struct gensec_ntlmssp_context *gensec_ntlmssp;
+
+    ERR("DecryptMessage(%p %p %d)\n", phContext, pMessage, MessageSeqNo);
+
+    if(!phContext)
+        return SEC_E_INVALID_HANDLE;
+
+    ctx = NtlmReferenceContextHdr(phContext->dwLower);
+    if (!ctx)
+    {
+        ERR("no context\n");
+        return SEC_E_INVALID_HANDLE;
+    }
+
+    TRACE("pMessage->cBuffers %d\n", pMessage->cBuffers);
+    /* extract data and signature buffers */
+    for (index = 0; index < (int) pMessage->cBuffers; index++)
+    {
+        TRACE("pMessage->pBuffers[index].BufferType %d\n", pMessage->pBuffers[index].BufferType);
+        if (pMessage->pBuffers[index].BufferType == SECBUFFER_DATA)
+            data_buffer = &pMessage->pBuffers[index];
+        else if (pMessage->pBuffers[index].BufferType == SECBUFFER_TOKEN)
+            signature_buffer = &pMessage->pBuffers[index];
+    }
+
+    gs = ctx->samba_gs;
+
+	gensec_ntlmssp = talloc_get_type_abort(gs->private_data,
+				                           struct gensec_ntlmssp_context);
+    state = gensec_ntlmssp->ntlmssp_state;
+
+    sig.data = signature_buffer->pvBuffer;
+    sig.length = signature_buffer->cbBuffer;
+
+    st = ntlmssp_unseal_packet(state,
+                               data_buffer->pvBuffer, data_buffer->cbBuffer,
+                               data_buffer->pvBuffer, data_buffer->cbBuffer,
+                               &sig);
+    if (!NT_STATUS_IS_OK(st))
+        return error_nt2sec(st);
+
+    return SEC_E_OK;
+    #else
     SECURITY_STATUS ret = SEC_E_OK;
     BOOL bRet;
     PSecBuffer data_buffer = NULL;
@@ -278,4 +330,5 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
 exit:
     NtlmDereferenceContext(phContext->dwLower);
     return ret;
+    #endif
 }

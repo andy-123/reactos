@@ -458,7 +458,7 @@ CliCreateContext(
 
         gssec->credentials = gscred;
 
-        context->samba_gs = gssec;
+        context->hdr.samba_gs = gssec;
     }
     #endif
 

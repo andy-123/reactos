@@ -221,6 +221,8 @@ typedef struct _NTLMSSP_CONTEXT_HDR
     ULONG ProcId;
     ULONG Timeout;
     NTLMSSP_CONTEXT_STATE State;
+    /* samba gs */
+    void* samba_gs;
 } NTLMSSP_CONTEXT_HDR, *PNTLMSSP_CONTEXT_HDR;
 
 /* context - message support (client + server) */
@@ -264,10 +266,6 @@ typedef struct _NTLMSSP_CONTEXT_CLI
 
     /* extra flags (not directly in spec) */
     BOOL UseNTLMv2;
-
-    /* samba gs */
-    void* samba_gs;
-
 } NTLMSSP_CONTEXT_CLI, *PNTLMSSP_CONTEXT_CLI;
 
 typedef struct _NTLMSSP_CONTEXT_SVR
@@ -292,10 +290,6 @@ typedef struct _NTLMSSP_CONTEXT_SVR
     /* generated in GenerateChallenge, needed when
      * AUTHENTICATE_MESSAGE is processed */
     UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH];
-
-    /* samba gs */
-    void* samba_gs;
-
 } NTLMSSP_CONTEXT_SVR, *PNTLMSSP_CONTEXT_SVR;
 
 /* private functions */

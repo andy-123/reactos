@@ -373,7 +373,6 @@ NTSTATUS ntlmssp_seal_packet(struct ntlmssp_state *ntlmssp_state,
 	return NT_STATUS_OK;
 }
 
-#ifndef __REACTOS__
 /**
  * Unseal data with the NTLMSSP algorithm
  *
@@ -409,12 +408,18 @@ NTSTATUS ntlmssp_unseal_packet(struct ntlmssp_state *ntlmssp_state,
 				      sig);
 
 	if (!NT_STATUS_IS_OK(status)) {
+        #ifndef __REACTOS__
 		DEBUG(1,("NTLMSSP packet check for unseal failed due to invalid signature on %llu bytes of input:\n",
 			 (unsigned long long)length));
+        #else
+		DEBUG(1,("NTLMSSP packet check for unseal failed due to invalid signature on %lu bytes of input:\n",
+			 (unsigned long)length));
+        #endif
 	}
 	return status;
 }
 
+#ifndef __REACTOS__
 NTSTATUS ntlmssp_wrap(struct ntlmssp_state *ntlmssp_state,
 		      TALLOC_CTX *out_mem_ctx,
 		      const DATA_BLOB *in,

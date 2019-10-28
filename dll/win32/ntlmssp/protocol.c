@@ -124,7 +124,7 @@ CliGenerateNegotiateMessage(
         ret = SEC_E_INTERNAL_ERROR;
         goto done;
     }*/
-    gs = context->samba_gs;
+    gs = context->hdr.samba_gs;
     if (!gs)
     {
         ERR("gs is NULL\n");
@@ -581,7 +581,7 @@ SvrHandleNegotiateMessage(
         goto done;
     }
 
-    context->samba_gs = gs;
+    context->hdr.samba_gs = gs;
 
     dataIn.data = InputToken->pvBuffer;
     dataIn.length = InputToken->cbBuffer;
@@ -895,7 +895,7 @@ CliGenerateAuthenticationMessage(
         goto done;
     }
 
-    gs = context->samba_gs;
+    gs = context->hdr.samba_gs;
 
     dataIn.data = InputToken1->pvBuffer;
     dataIn.length = InputToken1->cbBuffer;
@@ -1878,12 +1878,13 @@ SvrHandleAuthenticateMessage(
 
     struct gensec_security *gs;
     struct tevent_context *ev;
-    if(!(context = NtlmReferenceContextSvr(hContext)))
+
+    if (!(context = NtlmReferenceContextSvr(hContext)))
     {
         ret = SEC_E_INVALID_HANDLE;
         goto done;
     }
-    gs = context->samba_gs;
+    gs = context->hdr.samba_gs;
     ev = gs->auth_context->event_ctx;
 
     dataIn.data = InputToken->pvBuffer;
