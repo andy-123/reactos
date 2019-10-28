@@ -1900,7 +1900,13 @@ SvrHandleAuthenticateMessage(
 
     /* hacky but ... ok for now */
     st = _tevent_loop_wait(ev, "here!");
-    printf("tevent loop %lx\n", st);
+    /*printf("tevent loop %lx\n", st);*/
+    if (!NT_STATUS_IS_OK(st))
+    {
+        ERR("_tevent_loop_wait failed 0x%x\n", st);
+        ret = SEC_E_INTERNAL_ERROR;
+        goto done;
+    }
 
     st = ntlmssp_server_auth_recv(evReq, &reqst, &dataOut);
     if (!NT_STATUS_IS_OK(st))
@@ -1914,7 +1920,7 @@ SvrHandleAuthenticateMessage(
     {
         ERR("ntlmssp_server_auth_recv failed\n");
         ERR("TODO status -> nt error\n");
-        ret =  reqst;//TODO ntstatus -> sec status
+        ret = reqst;//TODO ntstatus -> sec status
         goto done;
     }
 

@@ -111,7 +111,11 @@ void tevent_debug(struct tevent_context *ev, enum tevent_debug_level level,
 		return;
 	}
 	va_start(ap, fmt);
+#ifndef __REACTOS__
 	ev->debug_ops.debug(ev->debug_ops.context, level, fmt, ap);
+#else
+    vprintf(fmt, ap);
+#endif
 	va_end(ap);
 }
 
