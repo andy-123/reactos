@@ -229,9 +229,16 @@ const DATA_BLOB ntlmssp_version_blob(void)
 	 * }
 	 */
 	static const uint8_t version_buffer[8] = {
+#ifndef __REACTOS__
 		NTLMSSP_WINDOWS_MAJOR_VERSION_6,
 		NTLMSSP_WINDOWS_MINOR_VERSION_1,
 		0x00, 0x00, /* product build */
+#else
+        /* ros target in win 2k3 */
+		NTLMSSP_WINDOWS_MAJOR_VERSION_5,
+		NTLMSSP_WINDOWS_MINOR_VERSION_2,
+		0xCE, 0x0E, /* product build */
+#endif
 		0x00, 0x00, 0x00, /* reserved */
 		NTLMSSP_REVISION_W2K3
 	};
