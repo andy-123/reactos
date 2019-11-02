@@ -1012,72 +1012,12 @@ int gensec_setting_int(struct gensec_settings *settings, const char *mechanism, 
 {
 	return lpcfg_parm_int(settings->lp_ctx, NULL, mechanism, name, default_value);
 }
-#endif
 
 bool gensec_setting_bool(struct gensec_settings *settings, const char *mechanism, const char *name, bool default_value)
 {
-	#ifndef __REACTOS__
     return lpcfg_parm_bool(settings->lp_ctx, NULL, mechanism, name, default_value);*/
-    #else
-    if (strcasecmp(mechanism, "ntlmssp_server") == 0)
-    {
-        D_WARNING("allow_lm_key depends on lmsecuritylevel (not implemented) ... returning true!\n");
-        if (strcasecmp(name, "allow_lm_key") == 0)
-            return true;
-        else if (strcasecmp(name, "force_old_spnego") == 0)
-            return false;
-        else if (strcasecmp(name, "128bit") == 0)
-            return true;
-        else if (strcasecmp(name, "56bit") == 0)
-            return true;
-        else if (strcasecmp(name, "keyexchange") == 0)
-            return true;
-        else if (strcasecmp(name, "alwayssign") == 0)
-            return true;
-        else if (strcasecmp(name, "ntlm2") == 0)
-            return true;
-        else
-        {
-            D_WARNING("using default value for %s/%s\n", mechanism, name);
-        }
-    }
-    else if (strcasecmp(mechanism, "ntlmssp_client") == 0)
-    {
-        if (strcasecmp(name, "unicode") == 0)
-            return true;
-        else if (strcasecmp(name, "send_nt_response") == 0)
-            return true;
-        else if (strcasecmp(name, "allow_lm_key") == 0)
-            return false;
-        else if (strcasecmp(name, "lm_key") == 0)
-            return false;
-        else if (strcasecmp(name, "force_old_spnego") == 0)
-            return false;
-        else if (strcasecmp(name, "128bit") == 0)
-            return true;
-        else if (strcasecmp(name, "56bit") == 0)
-            return false;
-        else if (strcasecmp(name, "keyexchange") == 0)
-            return true;
-        else if (strcasecmp(name, "alwayssign") == 0)
-            return true;
-        else if (strcasecmp(name, "ntlm2") == 0)
-            return true;
-        else
-        {
-            D_WARNING("using default value for %s/%s\n", mechanism, name);
-        }
-    }
-    else
-    {
-        D_WARNING("using default value for %s/%s\n", mechanism, name);
-    }
-    /* default */
-    return default_value;
-    #endif
 }
 
-#ifndef __REACTOS__
 /*
   initialise the GENSEC subsystem
 */

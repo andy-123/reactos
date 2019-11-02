@@ -14,6 +14,7 @@ list(APPEND SOURCE
 	ntlmssp.c
 	protocol.c
     smbhelper.c
+    smbsettings.c
     samba/auth/credentials/credentials_ntlm.c
     samba/auth/gensec/gensec_start.c
     samba/auth/gensec/gensec.c

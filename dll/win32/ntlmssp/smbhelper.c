@@ -93,65 +93,6 @@ const char *nt_errstr_const(NTSTATUS nt_code)
     return "TODO nt_errstr_const";
 }
 
-const char *lpcfg_workgroup(struct loadparm_context * x)
-{
-    D_WARNING("FIXME\n");
-    return "WORKGROUP";
-}
-
-const char *lpcfg_netbios_name(struct loadparm_context *x)
-{
-    D_WARNING("FIXME\n");
-    return "WORKGROUP";
-}
-
-const char *lpcfg_dnsdomain(struct loadparm_context *x)
-{
-    D_WARNING("FIXME\n");
-    return "WORKGROUP";
-}
-
-const int lpcfg_map_to_guest(struct loadparm_context *x)
-{
-    D_WARNING("FIXME\n");
-    return 0;//NEVER_MAP_TO_GUEST;
-}
-
-const bool lpcfg_lanman_auth(struct loadparm_context *x)
-{
-    D_WARNING("FIXME\n");
-    return true;//NEVER_MAP_TO_GUEST;
-}
-
-const enum ntlm_auth_level lpcfg_ntlm_auth(struct loadparm_context *x)
-{
-    D_WARNING("FIXME\n");
-    return NTLM_AUTH_ON;
-}
-
-const bool lpcfg_client_ntlmv2_auth(struct loadparm_context *x)
-{
-    D_WARNING("FIXME\n");
-    return false;//NEVER_MAP_TO_GUEST;
-}
-
-const bool lpcfg_client_lanman_auth(struct loadparm_context *x)
-{
-    D_WARNING("FIXME\n");
-    return true;//NEVER_MAP_TO_GUEST;
-}
-
-/* advapi */
-/*void WINAPI MD5Init(MD5_CTX *ctx)
-{
-    D_WARNING("FIXME\n");
-}
-
-void WINAPI MD5Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len)
-{
-    D_WARNING("FIXME\n");
-}*/
-
 void WINAPI MD5FinalSMB(uint8_t digest[MD5_DIGEST_LENGTH], MD5_CTX *context)
 {
     MD5Final(context);
@@ -180,8 +121,14 @@ void cli_credentials_get_ntlm_username_domain(struct cli_credentials *cred, TALL
 
 const char *cli_credentials_get_password(struct cli_credentials *cred)
 {
-    D_WARNING("FIXME\n");
-    return NULL;
+    char* smbpwd;
+    smbpwd = (char*)talloc_memdup(cred, cred->password, cred->passwordLen);
+    if (!NtlmUnProtectMemory(smbpwd, cred->passwordLen))
+    {
+        ERR("NtlmUnProtectMemory failed\n");
+        return NULL;
+    }
+    return smbpwd;
 }
 
 struct samr_Password *cli_credentials_get_nt_hash(struct cli_credentials *cred,
@@ -229,41 +176,6 @@ size_t strlcpy(char *destination, const char *source, size_t size)
     return size;
 }
 
-struct gensec_settings* gs = NULL;
-
-struct gensec_settings* smbGetGensecSettigs()
-{
-    if (gs == NULL)
-    {
-        gs = talloc_zero(NULL, struct gensec_settings);
-        gs->lp_ctx = talloc_zero(NULL, struct loadparm_context);
-
-        gs->target_hostname = "targethost";
-        gs->backends = NULL;
-        gs->server_dns_domain = NULL;
-        gs->server_dns_name = NULL;
-        gs->server_netbios_domain = NULL;
-        gs->server_netbios_name = NULL;
-    }
-
-    return gs;
-}
-
-void NtlmInitializeSamba()
-{
-    gs = NULL;
-}
-
-void NtlmFinalizeSamba()
-{
-    if (gs)
-    {
-        talloc_free(gs->lp_ctx);
-        talloc_free(gs);
-        gs = NULL;
-    }
-}
-
 NTSTATUS
 CopySmbBlobToSecBuffer(
     ULONG ISCContextReq,
@@ -297,7 +209,7 @@ CopySmbBlobToSecBuffer(
 }
 
 /* talloc-strdup for EXT_STRINGs */
-char *talloc_ExtWStrDup(const void *t, PEXT_STRING_W str)
+char *talloc_ExtWStrToAStrDup(const void *t, PEXT_STRING_W str)
 {
     EXT_STRING_A strA;
     char *str2;

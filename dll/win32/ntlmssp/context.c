@@ -426,6 +426,7 @@ CliCreateContext(
         struct gensec_security *gssec;
         struct cli_credentials *gscred;
         NTSTATUS st;
+        char* password;
 
         gssettings = smbGetGensecSettigs();
 
@@ -440,14 +441,19 @@ CliCreateContext(
                                GENSEC_FEATURE_SIGN;
 
         gscred = talloc_zero(gssec, struct cli_credentials);
-        gscred->username = talloc_ExtWStrDup(gscred, &cred->UserNameW);
-        gscred->password = talloc_ExtWStrDup(gscred, &cred->PasswordW);
-        gscred->domain = talloc_ExtWStrDup(gscred, &cred->DomainNameW);
+        gscred->username = talloc_ExtWStrToAStrDup(gscred, &cred->UserNameW);
+        gscred->domain = talloc_ExtWStrToAStrDup(gscred, &cred->DomainNameW);
         gscred->workstation = talloc_strdup(gscred, "WORKSTATION");
         gscred->nt_hash = talloc(gscred, struct samr_Password);
         NtlmUnProtectMemory(cred->PasswordW.Buffer, cred->PasswordW.bUsed);
+        password = talloc_ExtWStrToAStrDup(gscred, &cred->PasswordW);
         NTOWFv1((WCHAR*)cred->PasswordW.Buffer, (UCHAR*)gscred->nt_hash->hash);
         NtlmProtectMemory(cred->PasswordW.Buffer, cred->PasswordW.bUsed);
+
+        /* protect password */
+        gscred->passwordLen = strlen(password);
+        NtlmProtectMemory(password, gscred->passwordLen);
+        gscred->password = password;
 
         printf("password\n");
         NtlmUnProtectMemory(cred->PasswordW.Buffer, cred->PasswordW.bUsed);

@@ -850,6 +850,10 @@ NTSTATUS gensec_ntlmssp_client_start(struct gensec_security *gensec_security)
 		NTLMSSP_NEGOTIATE_NTLM |
 		NTLMSSP_NEGOTIATE_VERSION |
 		NTLMSSP_REQUEST_TARGET;
+#ifdef __REACTOS__
+    /* it seems in windows OEM flag is always present */
+    ntlmssp_state->neg_flags |= NTLMSSP_NEGOTIATE_OEM;
+#endif
 
 	if (ntlmssp_state->unicode) {
 		ntlmssp_state->neg_flags |= NTLMSSP_NEGOTIATE_UNICODE;

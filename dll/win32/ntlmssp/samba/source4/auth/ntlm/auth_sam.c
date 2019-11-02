@@ -294,11 +294,10 @@ static NTSTATUS authsam_password_check_and_record(struct auth4_context *auth_con
     lm_pwd = talloc_zero(NULL, struct samr_Password);
     nt_pwd = talloc_zero(NULL, struct samr_Password);
     /* hack */
-    memcpy(lm_pwd->hash, "\1\2\3\0", 4);
+    memset(lm_pwd->hash, 0, sizeof(nt_pwd->hash));
     memset(nt_pwd->hash, 0, sizeof(nt_pwd->hash));
     NTOWFv1(L"ROSauth!", nt_pwd->hash);
-    //strcpy((char*)nt_pwd->hash, "ROSauth!");
-    //memcpy(nt_pwd->hash, "\6\7\4\0", 4);
+    LMOWFv1("ROSauth!", lm_pwd->hash);
     #endif
 
 	auth_status = authsam_password_ok(auth_context, tmp_ctx,

@@ -54,6 +54,9 @@ struct cli_credentials {
 	const char *workstation;
 	const char *username;
 	const char *password;
+    #ifdef __REACTOS__
+    int passwordLen;
+    #endif
     #ifndef __REACTOS__
 	const char *old_password;
     #endif
