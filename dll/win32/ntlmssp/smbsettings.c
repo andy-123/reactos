@@ -45,10 +45,14 @@ const int lpcfg_map_to_guest(struct loadparm_context *x)
     return 0;//NEVER_MAP_TO_GUEST;
 }
 
+const bool lpcfg_client_lanman_auth(struct loadparm_context *x)
+{
+    return true;//(smbcfg.CliLMLevel & CLI_LMFLAG_USE_AUTH_LM);
+}
+
 const bool lpcfg_lanman_auth(struct loadparm_context *x)
 {
-    D_WARNING("FIXME\n");
-    return true;//NEVER_MAP_TO_GUEST;
+    return (smbcfg.SvrLMLevel & SVR_LMFLAG_ACCPT_AUTH_LM);
 }
 
 const enum ntlm_auth_level lpcfg_ntlm_auth(struct loadparm_context *x)
@@ -60,12 +64,6 @@ const enum ntlm_auth_level lpcfg_ntlm_auth(struct loadparm_context *x)
 const bool lpcfg_client_ntlmv2_auth(struct loadparm_context *x)
 {
     return (smbcfg.CliLMLevel & CLI_LMFLAG_USE_AUTH_NTLMv2);
-}
-
-const bool lpcfg_client_lanman_auth(struct loadparm_context *x)
-{
-    D_WARNING("FIXME\n");
-    return true;//NEVER_MAP_TO_GUEST;
 }
 
 /* gensec_start.c */
@@ -99,7 +97,7 @@ bool gensec_setting_bool(struct gensec_settings *settings, const char *mechanism
         else if (strcasecmp(name, "send_nt_response") == 0)
             return true;
         else if (strcasecmp(name, "allow_lm_key") == 0)
-            return (smbcfg.CliLMLevel & CLI_LMFLAG_USE_AUTH_LM);
+            return (smbcfg.SvrLMLevel & SVR_LMFLAG_ACCPT_AUTH_LM);
         else if (strcasecmp(name, "lm_key") == 0)
             return (smbcfg.CliLMLevel & CLI_LMFLAG_USE_AUTH_LM);
         else if (strcasecmp(name, "force_old_spnego") == 0)
@@ -153,7 +151,7 @@ void NtlmInitializeSamba()
     /*  NTLMV1 works */
     /*  NTLMV2 not fully working (AUTH_MESSAGE receives INVALID_PARAMETER :-( ) */
     /* FIXME value is stored in registry ... so get it from there! */
-    smbcfg.LMCompatibilityLevel = 1;// partly unimplemented
+    smbcfg.LMCompatibilityLevel = 2;// partly unimplemented
     /* LMCompatibilityLevel - matrix
      * cli/DC  lvl   LM-     NTLMv1-   NTLMv2   v2-Session-
      *               auth.   auth.     auth.     Security
