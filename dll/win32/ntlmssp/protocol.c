@@ -869,7 +869,7 @@ exit:
 
 SECURITY_STATUS
 CliGenerateAuthenticationMessage(
-    IN ULONG_PTR hContext,
+    IN PNTLMSSP_CONTEXT_CLI context,
     IN ULONG ISCContextReq,
     IN PSecBuffer InputToken1,
     IN PSecBuffer InputToken2,
@@ -881,19 +881,8 @@ CliGenerateAuthenticationMessage(
     #ifdef USE_SAMBA
     SECURITY_STATUS ret = SEC_E_OK;
     NTSTATUS st;
-    PNTLMSSP_CONTEXT_CLI context;
     struct gensec_security *gs;
     DATA_BLOB dataIn, dataOut;
-
-    /* get context */
-    context = NtlmReferenceContextCli(hContext);
-    //?? if (!context || !context->Credential)
-    if (!context)
-    {
-        ERR("CliGenerateAuthenticationMessage invalid context!\n");
-        ret = SEC_E_INVALID_HANDLE;
-        goto done;
-    }
 
     gs = context->hdr.samba_gs;
 
@@ -908,9 +897,7 @@ CliGenerateAuthenticationMessage(
     }
 
     ret = CopySmbBlobToSecBuffer(ISCContextReq, pISCContextAttr, &dataOut, OutputToken1);
-done:
-    if (context)
-        NtlmDereferenceContext((ULONG_PTR)context);
+
     return ret;
     #else
     SECURITY_STATUS ret = SEC_E_OK;
@@ -1945,6 +1932,7 @@ SvrHandleAuthenticateMessage(
     goto done;
 
 done:
+    *pASCContextAttr = 0x666;
     if (dataOut.length > 0)
         talloc_free(dataOut.data);
     return ret;

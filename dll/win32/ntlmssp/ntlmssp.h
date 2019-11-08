@@ -42,6 +42,9 @@
 
 #include "wine/unicode.h"
 
+#ifdef USE_SAMBA
+struct gensec_security;
+#endif
 //#include "samba/librpc/gen_ndr/ntlmssp.h"
 
 /* globals */
@@ -357,6 +360,12 @@ NtlmReferenceContextSvr(IN ULONG_PTR Handle);
 
 VOID
 NtlmDereferenceContext(IN ULONG_PTR Handle);
+
+#ifdef USE_SAMBA
+ULONG
+NtlmNegFlagsToSCRetFlags(
+    IN struct gensec_security *gs);
+#endif
 
 /* crypt.c */
 BOOL

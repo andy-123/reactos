@@ -26,6 +26,10 @@
 #include "samba/auth/gensec/gensec.h"
 #include "samba/auth/gensec/gensec_internal.h"
 #include "samba/auth/credentials/credentials_internal.h"
+#include "samba/lib/tevent/tevent.h"
+#include "samba/lib/tevent/tevent_internal.h"
+#include "samba/auth/ntlmssp/ntlmssp.h"
+#include "samba/auth/ntlmssp/ntlmssp_private.h"
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
@@ -270,6 +274,82 @@ NtlmAllocateContextSvr(VOID)
     return ret;
 }
 
+#ifdef USE_SAMBA
+/* Input:
+ * ContextReq - flags ISC_xxx or ASC_xxx wich came from
+ *      InitializeSecurityContext or AcceptSecurityContext
+ * Output:
+ * Value for (gensec_seurity)->want_features
+ *      This is a combination of GENSEC_FEATURE_xxx flags
+ *
+ * ms doc says for NTLM ContextReq can one or more
+ * of the following flags:
+ *     * ISC_REQ_ALLOCATE_MEMORY
+ *     * ISC_REQ_CONFIDENTIALITY
+ *     * ISC_REQ_CONNECTION
+ *     * ISC_REQ_EXTENDED_ERROR
+ *     * ISC_REQ_INTEGRITY
+ *     * ISC_REQ_MUTUAL_AUTH
+ *     * ISC_REQ_REPLAY_DETECT
+ *     * ISC_REQ_SEQUENCE_DETECT
+ *     * ISC_REQ_STREAM
+ * Flags with * are not supported ATM.
+ * I dont know how to set the options in samba code.
+ */
+ULONG
+NtlmSCReqFlagsToSmbFeatures(
+    IN ULONG ContextReq)
+
+{
+    ULONG features = 0;
+    /* ISC-flags but we mean both ISC or ASC flags! */
+    if (ContextReq & ISC_REQ_INTEGRITY)
+        features |= GENSEC_FEATURE_SIGN;
+    if (ContextReq & ISC_REQ_CONFIDENTIALITY)
+        features |= GENSEC_FEATURE_SEAL;
+    return features;
+}
+
+ULONG
+NtlmNegFlagsToSCRetFlags(
+    IN struct gensec_security *gs)
+{
+    ULONG ret = 0;
+    ULONG negFlags;
+    struct gensec_ntlmssp_context *gsntlmssp;
+
+    gsntlmssp =
+        talloc_get_type_abort(gs->private_data,
+                      struct gensec_ntlmssp_context);
+    negFlags = gsntlmssp->ntlmssp_state->neg_flags;
+
+    if (gs->gensec_role == GENSEC_SERVER)
+    {
+        if (gsntlmssp->ntlmssp_state->expected_state == NTLMSSP_DONE)
+        {
+            ret |= ISC_RET_IDENTIFY;
+        }
+    }
+
+    if (negFlags & NTLMSSP_NEGOTIATE_SIGN)
+    {
+        if (gs->gensec_role == GENSEC_CLIENT)
+        {
+            ret |= ISC_RET_INTEGRITY;
+        }
+        if (gsntlmssp->ntlmssp_state->expected_state > NTLMSSP_CHALLENGE)
+        {
+            ret |= ISC_RET_SEQUENCE_DETECT |
+                   ISC_RET_REPLAY_DETECT;
+        }
+    }
+    if (negFlags & NTLMSSP_NEGOTIATE_SEAL)
+        ret |= ISC_RET_CONFIDENTIALITY;
+
+    return ret;
+}
+#endif
+
 SECURITY_STATUS
 CliCreateContext(
     IN ULONG_PTR Credential,
@@ -437,8 +517,8 @@ CliCreateContext(
             return SEC_E_INTERNAL_ERROR;
         }
 
-        gssec->want_features = GENSEC_FEATURE_SEAL |
-                               GENSEC_FEATURE_SIGN;
+        /* client requested features */
+        gssec->want_features = NtlmSCReqFlagsToSmbFeatures(ISCContextReq);
 
         gscred = talloc_zero(gssec, struct cli_credentials);
         gscred->username = talloc_ExtWStrToAStrDup(gscred, &cred->UserNameW);
@@ -501,6 +581,10 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
     PSecBuffer OutputToken1, OutputToken2 = NULL;
     SecBufferDesc BufferDesc;
     PNTLMSSP_CONTEXT_CLI newContext = NULL;
+    PNTLMSSP_CONTEXT_CLI Context = NULL;
+    #ifdef USE_SAMBA
+    struct gensec_security *gs;
+    #endif
 
     TRACE("%p %p %s 0x%08lx %lx %lx %p %lx %p %p %p %p\n", phCredential, phContext,
      debugstr_w(pszTargetName), fContextReq, Reserved1, TargetDataRep, pInput,
@@ -508,6 +592,8 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
 
     if(TargetDataRep == SECURITY_NETWORK_DREP)
         WARN("SECURITY_NETWORK_DREP!!\n");
+
+    *pfContextAttr = 0;
 
     /* get first input token */
     ret = NtlmGetSecBuffer(pInput,
@@ -579,8 +665,16 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
             }
         }
         *phNewContext = *phContext;
+        /* get context */
+        Context = NtlmReferenceContextCli(phNewContext->dwLower);
+        if (!Context)
+        {
+            ERR("CliGenerateAuthenticationMessage invalid context!\n");
+            ret = SEC_E_INVALID_HANDLE;
+            goto fail;
+        }
         ret = CliGenerateAuthenticationMessage(
-            phNewContext->dwLower, fContextReq,
+            Context, fContextReq,
             InputToken1, InputToken2,
             OutputToken1, OutputToken2,
             pfContextAttr, ptsExpiry);
@@ -597,6 +691,14 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
         goto fail;
     }
 
+    #ifdef USE_SAMBA
+    if (Context != NULL)
+        gs = Context->hdr.samba_gs;
+    else
+        gs = newContext->hdr.samba_gs;
+    *pfContextAttr |= NtlmNegFlagsToSCRetFlags(gs);
+    #endif
+
     /* build blob with the output message */
     BufferDesc.ulVersion = SECBUFFER_VERSION;
     BufferDesc.cBuffers = 1;
@@ -608,12 +710,17 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
     if(pOutput)
         *pOutput = BufferDesc;
 
+    if (Context)
+        NtlmDereferenceContext((ULONG_PTR)Context);
+
     return ret;
 
 fail:
     /* free resources */
     if(newContext)
         NtlmDereferenceContext((ULONG_PTR)newContext);
+    if (Context)
+        NtlmDereferenceContext((ULONG_PTR)Context);
 
     if(fContextReq & ISC_REQ_ALLOCATE_MEMORY)
     {
@@ -818,9 +925,14 @@ AcceptSecurityContext(IN PCredHandle phCredential,
     SecBufferDesc BufferDesc;
     USER_SESSION_KEY sessionKey;
     ULONG userflags;
+    #ifdef USE_SAMBA
+    PNTLMSSP_CONTEXT_HDR contextHdr;
+    #endif
 
     TRACE("AcceptSecurityContext %p %p %p %lx %lx %p %p %p %p\n", phCredential, phContext, pInput,
         fContextReq, TargetDataRep, phNewContext, pOutput, pfContextAttr, ptsExpiry);
+
+    *pfContextAttr = 0;
 
     /* get first input token */
     ret = NtlmGetSecBuffer(pInput,
@@ -901,8 +1013,18 @@ AcceptSecurityContext(IN PCredHandle phCredential,
     BufferDesc.cBuffers = 1;
     BufferDesc.pBuffers = OutputToken1;
 
-    if(fContextReq & ASC_REQ_ALLOCATE_MEMORY)
+    if (fContextReq & ASC_REQ_ALLOCATE_MEMORY)
         *pfContextAttr |= ASC_RET_ALLOCATED_MEMORY;
+    #ifdef USE_SAMBA
+    contextHdr = NtlmReferenceContextHdr(phNewContext->dwLower);
+    if ((!contextHdr) ||
+        (!contextHdr->samba_gs))
+    {
+        ret = SEC_E_INTERNAL_ERROR;
+        goto fail;
+    }
+    *pfContextAttr = NtlmNegFlagsToSCRetFlags(contextHdr->samba_gs);
+    #endif
 
     *pOutput = BufferDesc;
     return ret;

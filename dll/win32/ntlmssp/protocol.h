@@ -364,7 +364,7 @@ CliGenerateNegotiateMessage(
 
 SECURITY_STATUS
 CliGenerateAuthenticationMessage(
-    IN ULONG_PTR hContext,
+    IN PNTLMSSP_CONTEXT_CLI context,
     IN ULONG ISCContextReq,
     IN PSecBuffer InputToken1,
     IN PSecBuffer InputToken2,
