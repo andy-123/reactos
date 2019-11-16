@@ -22,6 +22,7 @@
 #include "ntlmssp.h"
 #include "protocol.h"
 #include "smbhelper.h"
+#include "smbsettings.h"
 #include "samba/lib/talloc/talloc.h"
 #include "samba/auth/gensec/gensec.h"
 #include "samba/auth/gensec/gensec_internal.h"
@@ -505,10 +506,12 @@ CliCreateContext(
         struct gensec_settings *gssettings;
         struct gensec_security *gssec;
         struct cli_credentials *gscred;
+        struct rosconfig* roscfg;
         NTSTATUS st;
         char* password;
 
         gssettings = smbGetGensecSettigs();
+        roscfg = smbGetROSConfig();
 
         st = gensec_client_start(NULL, &gssec, gssettings);
         if (!NT_STATUS_IS_OK(st))
@@ -523,7 +526,7 @@ CliCreateContext(
         gscred = talloc_zero(gssec, struct cli_credentials);
         gscred->username = talloc_ExtWStrToAStrDup(gscred, &cred->UserNameW);
         gscred->domain = talloc_ExtWStrToAStrDup(gscred, &cred->DomainNameW);
-        gscred->workstation = talloc_strdup(gscred, "WORKSTATION");
+        gscred->workstation = talloc_ExtAStrToAStrDup(gscred, &roscfg->netbiosNameOEM);
         gscred->nt_hash = talloc(gscred, struct samr_Password);
         NtlmUnProtectMemory(cred->PasswordW.Buffer, cred->PasswordW.bUsed);
         password = talloc_ExtWStrToAStrDup(gscred, &cred->PasswordW);

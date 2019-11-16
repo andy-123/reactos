@@ -240,6 +240,7 @@ CopySmbBlobToSecBuffer(
     OUT PSecBuffer buffer);
 
 /* talloc-strdup for EXT_STRINGs */
+char *talloc_ExtAStrToAStrDup(const void *t, PEXT_STRING_A str);
 char *talloc_ExtWStrToAStrDup(const void *t, PEXT_STRING_W str);
 
 /* map (smb) NTSTATUS to SECURITY_STATUS */

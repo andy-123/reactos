@@ -209,6 +209,11 @@ CopySmbBlobToSecBuffer(
 }
 
 /* talloc-strdup for EXT_STRINGs */
+char *talloc_ExtAStrToAStrDup(const void *t, PEXT_STRING_A str)
+{
+    return talloc_strdup(t, (char*)str->Buffer);
+}
+
 char *talloc_ExtWStrToAStrDup(const void *t, PEXT_STRING_W str)
 {
     EXT_STRING_A strA;

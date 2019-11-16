@@ -1,6 +1,7 @@
 // settings for samba ... loaded from windows (registry)
 
 #include "smbincludes.h"
+#include "smbsettings.h"
 #include "samba/libcli/auth/ntlm_check.h"
 #include "samba/lib/param/loadparm.h"
 
@@ -10,20 +11,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 
 struct gensec_settings* gsettings = NULL;
-struct rosconfig
-{
-    /* LMCompatibilityLevel comes from registry */
-    uint8_t LMCompatibilityLevel;
-    /* CliLMLevel and SvrLMLevel depends on LMCompatibilityLevel */
-    uint8_t CliLMLevel;
-    uint8_t SvrLMLevel;
-    /* computername */
-    EXT_STRING_A computerNameOEM;
-    /* netbios name */
-    EXT_STRING_A netbiosNameOEM;
-    /* domain name - empty if not in domain */
-    EXT_STRING_A domainNameOEM;
-} roscfg;
+struct rosconfig roscfg;
 
 
 
@@ -80,7 +68,7 @@ bool gensec_setting_bool(struct gensec_settings *settings, const char *mechanism
         if (strcasecmp(name, "allow_lm_key") == 0)
             return (roscfg.SvrLMLevel & SVR_LMFLAG_ACCPT_AUTH_LM);
         else if (strcasecmp(name, "force_old_spnego") == 0)
-            return false;
+            return true; /* win2000 mode, is good for w2k3 too */
         else if (strcasecmp(name, "128bit") == 0)
             return true;
         else if (strcasecmp(name, "56bit") == 0)
@@ -107,7 +95,7 @@ bool gensec_setting_bool(struct gensec_settings *settings, const char *mechanism
         else if (strcasecmp(name, "lm_key") == 0)
             return (roscfg.CliLMLevel & CLI_LMFLAG_USE_AUTH_LM);
         else if (strcasecmp(name, "force_old_spnego") == 0)
-            return false;
+            return true; /* win2000 mode, is good for w2k3 too */
         else if (strcasecmp(name, "128bit") == 0)
             return true;
         else if (strcasecmp(name, "56bit") == 0)
@@ -151,6 +139,11 @@ struct gensec_settings* smbGetGensecSettigs()
     }
 
     return gsettings;
+}
+
+struct rosconfig* smbGetROSConfig()
+{
+    return &roscfg;
 }
 
 void NtlmInitializeSamba_LMCompLvl(
