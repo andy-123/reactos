@@ -56,7 +56,6 @@ list(APPEND SOURCE
     samba/lib/util/data_blob.c
     samba/lib/util/debug.c
     samba/lib/util/genrand.c
-    samba/lib/util/talloc_stack.c
     samba/lib/util/tevent_ntstatus.c
     samba/lib/util/time_basic.c
     samba/lib/util/util_strlist.c
