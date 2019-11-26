@@ -59,6 +59,7 @@ struct auth_usersupplied_info
 
 	bool mapped_state;
 	bool was_mapped;
+	uint64_t logon_id;
 	/* the values the client gives us */
 	struct {
 		const char *account_name;
@@ -139,6 +140,7 @@ struct auth4_context {
 
 	/* Private data for the callbacks on this auth context */
 	void *private_data;
+
 	NTSTATUS (*check_ntlm_password)(struct auth4_context *auth_ctx,
 					TALLOC_CTX *mem_ctx,
 					const struct auth_usersupplied_info *user_info,
@@ -201,7 +203,6 @@ void log_authentication_event(struct imessaging_context *msg_ctx,
 			      NTSTATUS status,
 			      const char *account_name,
 			      const char *domain_name,
-			      const char *unix_username,
 			      struct dom_sid *sid);
 
 #ifndef __REACTOS__
@@ -227,5 +228,4 @@ void log_successful_authz_event(struct imessaging_context *msg_ctx,
 				const char *transport_protection,
 				struct auth_session_info *session_info);
 #endif
-
 #endif

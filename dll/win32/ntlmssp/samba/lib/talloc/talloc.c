@@ -54,7 +54,7 @@
 #ifdef __REACTOS__
 /* HACK .. this should be fixed if we use talloc as library! */
 #define TALLOC_BUILD_VERSION_MAJOR 2
-#define TALLOC_BUILD_VERSION_MINOR 1
+#define TALLOC_BUILD_VERSION_MINOR 2
 #define TALLOC_BUILD_VERSION_RELEASE 99
 #endif
 
@@ -337,6 +337,11 @@ struct talloc_chunk {
 	 * from.
 	 */
 	struct talloc_pool_hdr *pool;
+};
+
+union talloc_chunk_cast_u {
+	uint8_t *ptr;
+	struct talloc_chunk *chunk;
 };
 
 /* 16 byte alignment seems to keep everyone happy */
@@ -635,16 +640,43 @@ struct talloc_pool_hdr {
 	size_t poolsize;
 };
 
+union talloc_pool_hdr_cast_u {
+	uint8_t *ptr;
+	struct talloc_pool_hdr *hdr;
+};
+
 #define TP_HDR_SIZE TC_ALIGN16(sizeof(struct talloc_pool_hdr))
 
 static inline struct talloc_pool_hdr *talloc_pool_from_chunk(struct talloc_chunk *c)
 {
-	return (struct talloc_pool_hdr *)((char *)c - TP_HDR_SIZE);
+    #ifndef __REACTOS__
+	union talloc_chunk_cast_u tcc = { .chunk = c };
+	union talloc_pool_hdr_cast_u tphc = { tcc.ptr - TP_HDR_SIZE };
+    #else
+	union talloc_chunk_cast_u tcc;
+	union talloc_pool_hdr_cast_u tphc;
+    memset(&tcc, 0, sizeof(tcc));
+    memset(&tphc, 0, sizeof(tphc));
+    tcc.chunk = c;
+    tphc.ptr = tcc.ptr - TP_HDR_SIZE;
+    #endif
+	return tphc.hdr;
 }
 
 static inline struct talloc_chunk *talloc_chunk_from_pool(struct talloc_pool_hdr *h)
 {
-	return (struct talloc_chunk *)((char *)h + TP_HDR_SIZE);
+    #ifndef __REACTOS__
+	union talloc_pool_hdr_cast_u tphc = { .hdr = h };
+	union talloc_chunk_cast_u tcc = { .ptr = tphc.ptr + TP_HDR_SIZE };
+    #else
+	union talloc_pool_hdr_cast_u tphc;
+	union talloc_chunk_cast_u tcc;
+    memset(&tcc, 0, sizeof(tcc));
+    memset(&tphc, 0, sizeof(tphc));
+    tphc.hdr = h;
+    tcc.ptr = tphc.ptr + TP_HDR_SIZE;
+    #endif
+	return tcc.chunk;
 }
 
 static inline void *tc_pool_end(struct talloc_pool_hdr *pool_hdr)
@@ -692,6 +724,7 @@ static inline struct talloc_chunk *tc_alloc_pool(struct talloc_chunk *parent,
 						     size_t size, size_t prefix_len)
 {
 	struct talloc_pool_hdr *pool_hdr = NULL;
+	union talloc_chunk_cast_u tcc;
 	size_t space_left;
 	struct talloc_chunk *result;
 	size_t chunk_size;
@@ -722,7 +755,15 @@ static inline struct talloc_chunk *tc_alloc_pool(struct talloc_chunk *parent,
 		return NULL;
 	}
 
-	result = (struct talloc_chunk *)((char *)pool_hdr->end + prefix_len);
+    #ifndef __REACTOS__
+	tcc = (union talloc_chunk_cast_u) {
+		.ptr = ((uint8_t *)pool_hdr->end) + prefix_len
+	};
+    #else
+    memset(&tcc, 0, sizeof(tcc));
+    tcc.ptr = ((uint8_t *)pool_hdr->end) + prefix_len;
+    #endif
+	result = tcc.chunk;
 
 #if defined(DEVELOPER) && defined(VALGRIND_MAKE_MEM_UNDEFINED)
 	VALGRIND_MAKE_MEM_UNDEFINED(pool_hdr->end, chunk_size);
@@ -774,7 +815,8 @@ static inline void *__talloc_with_prefix(const void *context,
 	}
 
 	if (tc == NULL) {
-		char *ptr;
+		uint8_t *ptr = NULL;
+		union talloc_chunk_cast_u tcc;
 
 		/*
 		 * Only do the memlimit check/update on actual allocation.
@@ -788,7 +830,13 @@ static inline void *__talloc_with_prefix(const void *context,
 		if (unlikely(ptr == NULL)) {
 			return NULL;
 		}
-		tc = (struct talloc_chunk *)(ptr + prefix_len);
+        #ifndef __REACTOS__
+		tcc = (union talloc_chunk_cast_u) { .ptr = ptr + prefix_len };
+        #else
+        memset(&tcc, 0, sizeof(tcc));
+        tcc.ptr = ptr + prefix_len;
+        #endif
+		tc = tcc.chunk;
 		tc->flags = talloc_magic;
 		tc->pool  = NULL;
 

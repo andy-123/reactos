@@ -2,6 +2,7 @@
 #include "samba/libcli/auth/ntlm_check.h"
 #include "samba/lib/param/loadparm.h"
 #include "samba/auth/credentials/credentials_internal.h"
+#include "ciphers.h"
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
@@ -93,11 +94,181 @@ const char *nt_errstr_const(NTSTATUS nt_code)
     return "TODO nt_errstr_const";
 }
 
-void WINAPI MD5FinalSMB(uint8_t digest[MD5_DIGEST_LENGTH], MD5_CTX *context)
+NTSTATUS gnutls_error_to_ntstatus(
+    IN int returncode,
+    IN ULONG error)
 {
-    MD5Final(context);
-    memcpy(digest, context->digest, MD5_DIGEST_LENGTH);
+    return error;
 }
+
+int gnutls_hash_init(
+    IN gnutls_hash_hd_t *dig,
+    IN gnutls_digest_algorithm_t algorithm)
+{
+    if (algorithm == GNUTLS_DIG_MD5)
+    {
+        *dig = NtlmAllocate(sizeof(_gnutls_hash_hd_t));
+        (*dig)->algo = algorithm;
+        MD5Init(&(*dig)->ctx);
+        return 0;
+    }
+    return -1;
+}
+
+int gnutls_hash(
+    IN gnutls_hash_hd_t handle,
+    IN const void *text,
+    IN size_t textlen)
+{
+    if (handle->algo == GNUTLS_DIG_MD5)
+    {
+        MD5Update(&handle->ctx, text, textlen);
+        return 0;
+    }
+    return -1;
+}
+
+void gnutls_hash_deinit(
+    IN gnutls_hash_hd_t handle,
+    IN void *digest)
+{
+    if (digest)
+    {
+        MD5Final(&handle->ctx);
+        memcpy(digest, handle->ctx.digest, MD5_DIGEST_LENGTH);
+    }
+    NtlmFree((void*)handle);
+}
+
+
+
+int gnutls_hash_fast(
+    IN ULONG DIG_mode,
+    IN BYTE *dataIn,
+    IN ULONG dataLen,
+    OUT BYTE dataOut[16])
+{
+    if (DIG_mode == GNUTLS_DIG_MD5)
+    {
+        MD5_CTX md5ctx;
+
+        MD5Init(&md5ctx);
+        MD5Update(&md5ctx, dataIn, dataLen);
+        MD5Final(&md5ctx);
+        memcpy(dataOut, md5ctx.digest, MD5_DIGEST_LENGTH);
+        return 0;
+    }
+    ERR("gnutls_hash_fast\n");
+    return -1;
+}
+
+int gnutls_cipher_init(
+    IN gnutls_cipher_hd_t *handle,
+    IN gnutls_cipher_algorithm_t cipher,
+    IN const gnutls_datum_t *key,
+    IN const gnutls_datum_t *iv)
+{
+    if (cipher == GNUTLS_CIPHER_ARCFOUR_128)
+    {
+        if (key->size != 16)
+        {
+            ERR("expected key-size 16, got size %i\n", key->size);
+            return -1;
+        }
+        *handle = NtlmAllocate(sizeof(_gnutls_cipher_hd_t));
+        (*handle)->cipher = cipher;
+        (*handle)->key = key;
+        return 0;
+    }
+    ERR("gnutls_cipher_init\n");
+    return -1;
+}
+
+int gnutls_cipher_encrypt(
+    IN const gnutls_cipher_hd_t handle,
+    IN OUT void *text,
+    IN size_t textlen)
+{
+    if (handle->cipher == GNUTLS_CIPHER_ARCFOUR_128)
+    {
+        arcfour_crypt(text, handle->key->data, textlen);
+        return 0;
+    }
+    ERR("gnutls_cipher_encrypt\n");
+    return -1;
+}
+
+void gnutls_cipher_deinit(
+    IN gnutls_cipher_hd_t handle)
+{
+    NtlmFree((void*)handle);
+}
+
+int gnutls_hmac_fast(
+    IN gnutls_mac_algorithm_t algorithm,
+    IN const void *key,
+    IN size_t keylen,
+    IN const void *text,
+    IN size_t textlen,
+    IN void *digest)
+{
+    if (algorithm == GNUTLS_MAC_MD5)
+    {
+        HMAC_MD5(key, keylen, text, textlen, digest);
+        return 0;
+    }
+    ERR("gnutls_hmac_fast\n");
+    return -1;
+}
+
+int gnutls_hmac_init(
+    IN gnutls_hmac_hd_t *dig,
+    IN gnutls_mac_algorithm_t algorithm,
+    IN const void *key,
+    IN size_t keylen)
+{
+    if (algorithm == GNUTLS_MAC_MD5)
+    {
+        *dig = NtlmAllocate(sizeof(_gnutls_hmac_hd_t));
+        (*dig)->algo = algorithm;
+        HMACMD5Init(&(*dig)->md5ctx, key, keylen);
+        return 0;
+    }
+    ERR("gnutls_hmac_init\n");
+    return -1;
+}
+
+void gnutls_hmac_deinit(
+    IN gnutls_hmac_hd_t handle,
+    OUT void *digest)
+{
+    if (handle->algo == GNUTLS_MAC_MD5)
+    {
+        if (digest)
+            HMACMD5Final(&handle->md5ctx, digest);
+
+        NtlmFree((void*)handle);
+        return;
+    }
+    NtlmFree((void*)handle);
+    ERR("gnutls_hmac_deinit\n");
+}
+
+int gnutls_hmac(
+    IN gnutls_hmac_hd_t handle,
+    IN const void *text,
+    IN size_t textlen)
+{
+    if (handle->algo == GNUTLS_MAC_MD5)
+    {
+        HMACMD5Update(&handle->md5ctx, text, textlen);
+        return 0;
+    }
+    ERR("gnutls_hmac\n");
+    return -1;
+}
+
+
 
 /* auth/credentials/credentials.h: */
 const char *cli_credentials_get_workstation(struct cli_credentials *cred)
@@ -147,7 +318,6 @@ void log_authentication_event(struct imessaging_context *msg_ctx,
 			      NTSTATUS status,
 			      const char *account_name,
 			      const char *domain_name,
-			      const char *unix_username,
 			      struct dom_sid *sid)
 {
     D_WARNING("FIXME\n");

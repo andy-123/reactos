@@ -384,6 +384,7 @@ static void auth_check_password_next(struct tevent_req *req)
 					req);
 		return;
 	}
+
 	if (state->method->ops->check_password == NULL) {
 		tevent_req_nterror(req, NT_STATUS_INTERNAL_ERROR);
 		return;
@@ -495,7 +496,7 @@ _PUBLIC_ NTSTATUS auth_check_password_recv(struct tevent_req *req,
 					 state->auth_ctx->lp_ctx,
 					 &state->auth_ctx->start_time,
 					 state->user_info, status,
-					 NULL, NULL, NULL, NULL);
+					 NULL, NULL, NULL);
 		tevent_req_received(req);
 		return status;
 	}
@@ -512,7 +513,6 @@ _PUBLIC_ NTSTATUS auth_check_password_recv(struct tevent_req *req,
 				 state->user_info, status,
 				 state->user_info_dc->info->domain_name,
 				 state->user_info_dc->info->account_name,
-				 NULL,
 				 &state->user_info_dc->sids[0]);
 
 	*user_info_dc = talloc_move(mem_ctx, &state->user_info_dc);
@@ -950,7 +950,7 @@ _PUBLIC_ NTSTATUS auth4_init(void)
 	STATIC_auth4_MODULES_PROTO;
 	init_module_fn static_init[] = { STATIC_auth4_MODULES };
 #endif
-
+	
 	if (initialized) return NT_STATUS_OK;
 	initialized = true;
 	
@@ -960,6 +960,6 @@ _PUBLIC_ NTSTATUS auth4_init(void)
     /* hack .. this should make run_init_functions */
     auth4_sam_init(NULL);
 #endif
-
+	
 	return NT_STATUS_OK;	
 }

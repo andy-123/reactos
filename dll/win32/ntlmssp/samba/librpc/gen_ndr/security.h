@@ -540,38 +540,6 @@ struct standard_mapping {
 	uint32_t std_all;
 };
 
-
-struct decode_security_descriptor {
-	struct {
-		struct security_descriptor sd;
-	} in;
-
-};
-
-
-struct decode_sec_desc_buf {
-	struct {
-		struct sec_desc_buf sd_buf;
-	} in;
-
-};
-
-
-struct decode_security_token {
-	struct {
-		struct security_token token;
-	} in;
-
-};
-
-
-struct decode_security_unix_token {
-	struct {
-		struct security_unix_token unix_token;
-	} in;
-
-};
-
 #endif /* _HEADER_security */
 #endif /* _PIDL_HEADER_security */
 #endif /* _REACTOS */

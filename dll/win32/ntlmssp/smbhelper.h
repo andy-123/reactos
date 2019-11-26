@@ -214,7 +214,99 @@ void WINAPI MD5Init(MD5_CTX *ctx);
 void WINAPI MD5Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len);
 void WINAPI MD5Final(uint8_t digest[MD5_DIGEST_LENGTH], MD5_CTX *context);
 */
-void WINAPI MD5FinalSMB(uint8_t digest[MD5_DIGEST_LENGTH], MD5_CTX *context);
+
+
+
+/* gnutls */
+typedef struct
+{
+    BYTE* data;
+    ULONG size;
+} gnutls_datum_t;
+
+typedef enum
+{
+    GNUTLS_CIPHER_ARCFOUR_128 = 0
+} gnutls_cipher_algorithm_t;
+typedef struct
+{
+    gnutls_cipher_algorithm_t cipher;
+    const gnutls_datum_t* key;
+} _gnutls_cipher_hd_t, *gnutls_cipher_hd_t;
+
+typedef enum
+{
+    GNUTLS_DIG_MD5 = 0
+} gnutls_digest_algorithm_t;
+typedef struct
+{
+    gnutls_digest_algorithm_t algo;
+    MD5_CTX ctx;
+} _gnutls_hash_hd_t, *gnutls_hash_hd_t;
+
+typedef enum
+{
+    GNUTLS_MAC_MD5 = 0
+} gnutls_mac_algorithm_t;
+typedef struct
+{
+    gnutls_mac_algorithm_t algo;
+    HMAC_MD5_CTX md5ctx;
+} _gnutls_hmac_hd_t, *gnutls_hmac_hd_t;
+
+/* gnutls */
+NTSTATUS gnutls_error_to_ntstatus(
+    IN int returncode,
+    IN ULONG error);
+
+int gnutls_cipher_init(
+    IN gnutls_cipher_hd_t * handle,
+    IN gnutls_cipher_algorithm_t cipher,
+    IN const gnutls_datum_t * key,
+    IN const gnutls_datum_t * iv);
+int gnutls_cipher_encrypt(
+    IN const gnutls_cipher_hd_t handle,
+    IN OUT void *text,
+    IN size_t textlen);
+void gnutls_cipher_deinit(
+    IN gnutls_cipher_hd_t handle);
+
+int gnutls_hash_init(
+    IN gnutls_hash_hd_t *dig,
+    IN gnutls_digest_algorithm_t algorithm);
+int gnutls_hash(
+    IN gnutls_hash_hd_t handle,
+    IN const void *text,
+    IN size_t textlen);
+void gnutls_hash_deinit(
+    IN gnutls_hash_hd_t handle,
+    IN void *digest);
+
+int gnutls_hash_fast(
+    IN ULONG DIG_mode,
+    IN BYTE *dataIn,
+    IN ULONG dataLen,
+    OUT BYTE dataOut[16]);
+
+int gnutls_hmac_fast(
+    IN gnutls_mac_algorithm_t algorithm,
+    IN const void *key,
+    IN size_t keylen,
+    IN const void *text,
+    IN size_t textlen,
+    IN void *digest);
+int gnutls_hmac_init(
+    IN gnutls_hmac_hd_t * dig,
+    IN gnutls_mac_algorithm_t algorithm,
+    IN const void *key,
+    IN size_t keylen);
+void gnutls_hmac_deinit(
+    IN gnutls_hmac_hd_t handle,
+    OUT void *digest);
+int gnutls_hmac(
+    IN gnutls_hmac_hd_t handle,
+    IN const void *text,
+    IN size_t textlen);
 
 
 

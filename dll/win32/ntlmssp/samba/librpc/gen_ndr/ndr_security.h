@@ -16,15 +16,7 @@
 #define NDR_SECURITY_NAME "security"
 #define NDR_SECURITY_HELPSTRING NULL
 extern const struct ndr_interface_table ndr_table_security;
-#define NDR_DECODE_SECURITY_DESCRIPTOR (0x00)
-
-#define NDR_DECODE_SEC_DESC_BUF (0x01)
-
-#define NDR_DECODE_SECURITY_TOKEN (0x02)
-
-#define NDR_DECODE_SECURITY_UNIX_TOKEN (0x03)
-
-#define NDR_SECURITY_CALL_COUNT (4)
+#define NDR_SECURITY_CALL_COUNT (0)
 enum ndr_err_code ndr_push_dom_sid(struct ndr_push *ndr, int ndr_flags, const struct dom_sid *r);
 enum ndr_err_code ndr_pull_dom_sid(struct ndr_pull *ndr, int ndr_flags, struct dom_sid *r);
 void ndr_print_dom_sid(struct ndr_print *ndr, const char *name, const struct dom_sid *r);
@@ -89,9 +81,5 @@ void ndr_print_kerb_EncTypes(struct ndr_print *ndr, const char *name, uint32_t r
 enum ndr_err_code ndr_push_security_autoinherit(struct ndr_push *ndr, int ndr_flags, uint32_t r);
 enum ndr_err_code ndr_pull_security_autoinherit(struct ndr_pull *ndr, int ndr_flags, uint32_t *r);
 void ndr_print_security_autoinherit(struct ndr_print *ndr, const char *name, uint32_t r);
-void ndr_print_decode_security_descriptor(struct ndr_print *ndr, const char *name, int flags, const struct decode_security_descriptor *r);
-void ndr_print_decode_sec_desc_buf(struct ndr_print *ndr, const char *name, int flags, const struct decode_sec_desc_buf *r);
-void ndr_print_decode_security_token(struct ndr_print *ndr, const char *name, int flags, const struct decode_security_token *r);
-void ndr_print_decode_security_unix_token(struct ndr_print *ndr, const char *name, int flags, const struct decode_security_unix_token *r);
 #endif /* __REACTOS__ */
 #endif /* _HEADER_NDR_security */

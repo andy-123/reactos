@@ -2260,272 +2260,102 @@ _PUBLIC_ void ndr_print_NTLMSSP_MESSAGE_SIGNATURE_NTLMv2(struct ndr_print *ndr, 
 	}
 }
 
-static enum ndr_err_code ndr_push_decode_NEGOTIATE_MESSAGE(struct ndr_push *ndr, int flags, const struct decode_NEGOTIATE_MESSAGE *r)
-{
-	NDR_PUSH_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_push_NEGOTIATE_MESSAGE(ndr, NDR_SCALARS|NDR_BUFFERS, &r->in.negotiate));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-static enum ndr_err_code ndr_pull_decode_NEGOTIATE_MESSAGE(struct ndr_pull *ndr, int flags, struct decode_NEGOTIATE_MESSAGE *r)
-{
-	NDR_PULL_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_pull_NEGOTIATE_MESSAGE(ndr, NDR_SCALARS|NDR_BUFFERS, &r->in.negotiate));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-_PUBLIC_ void ndr_print_decode_NEGOTIATE_MESSAGE(struct ndr_print *ndr, const char *name, int flags, const struct decode_NEGOTIATE_MESSAGE *r)
-{
-	ndr_print_struct(ndr, name, "decode_NEGOTIATE_MESSAGE");
-	if (r == NULL) { ndr_print_null(ndr); return; }
-	ndr->depth++;
-	if (flags & NDR_SET_VALUES) {
-		ndr->flags |= LIBNDR_PRINT_SET_VALUES;
-	}
-	if (flags & NDR_IN) {
-		ndr_print_struct(ndr, "in", "decode_NEGOTIATE_MESSAGE");
-		ndr->depth++;
-		ndr_print_NEGOTIATE_MESSAGE(ndr, "negotiate", &r->in.negotiate);
-		ndr->depth--;
-	}
-	if (flags & NDR_OUT) {
-		ndr_print_struct(ndr, "out", "decode_NEGOTIATE_MESSAGE");
-		ndr->depth++;
-		ndr->depth--;
-	}
-	ndr->depth--;
-}
-
-static enum ndr_err_code ndr_push_decode_CHALLENGE_MESSAGE(struct ndr_push *ndr, int flags, const struct decode_CHALLENGE_MESSAGE *r)
-{
-	NDR_PUSH_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_push_CHALLENGE_MESSAGE(ndr, NDR_SCALARS|NDR_BUFFERS, &r->in.challenge));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-static enum ndr_err_code ndr_pull_decode_CHALLENGE_MESSAGE(struct ndr_pull *ndr, int flags, struct decode_CHALLENGE_MESSAGE *r)
-{
-	NDR_PULL_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_pull_CHALLENGE_MESSAGE(ndr, NDR_SCALARS|NDR_BUFFERS, &r->in.challenge));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-_PUBLIC_ void ndr_print_decode_CHALLENGE_MESSAGE(struct ndr_print *ndr, const char *name, int flags, const struct decode_CHALLENGE_MESSAGE *r)
-{
-	ndr_print_struct(ndr, name, "decode_CHALLENGE_MESSAGE");
-	if (r == NULL) { ndr_print_null(ndr); return; }
-	ndr->depth++;
-	if (flags & NDR_SET_VALUES) {
-		ndr->flags |= LIBNDR_PRINT_SET_VALUES;
-	}
-	if (flags & NDR_IN) {
-		ndr_print_struct(ndr, "in", "decode_CHALLENGE_MESSAGE");
-		ndr->depth++;
-		ndr_print_CHALLENGE_MESSAGE(ndr, "challenge", &r->in.challenge);
-		ndr->depth--;
-	}
-	if (flags & NDR_OUT) {
-		ndr_print_struct(ndr, "out", "decode_CHALLENGE_MESSAGE");
-		ndr->depth++;
-		ndr->depth--;
-	}
-	ndr->depth--;
-}
-
-static enum ndr_err_code ndr_push_decode_AUTHENTICATE_MESSAGE(struct ndr_push *ndr, int flags, const struct decode_AUTHENTICATE_MESSAGE *r)
-{
-	NDR_PUSH_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_push_AUTHENTICATE_MESSAGE(ndr, NDR_SCALARS|NDR_BUFFERS, &r->in.authenticate));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-static enum ndr_err_code ndr_pull_decode_AUTHENTICATE_MESSAGE(struct ndr_pull *ndr, int flags, struct decode_AUTHENTICATE_MESSAGE *r)
-{
-	NDR_PULL_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_pull_AUTHENTICATE_MESSAGE(ndr, NDR_SCALARS|NDR_BUFFERS, &r->in.authenticate));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-_PUBLIC_ void ndr_print_decode_AUTHENTICATE_MESSAGE(struct ndr_print *ndr, const char *name, int flags, const struct decode_AUTHENTICATE_MESSAGE *r)
-{
-	ndr_print_struct(ndr, name, "decode_AUTHENTICATE_MESSAGE");
-	if (r == NULL) { ndr_print_null(ndr); return; }
-	ndr->depth++;
-	if (flags & NDR_SET_VALUES) {
-		ndr->flags |= LIBNDR_PRINT_SET_VALUES;
-	}
-	if (flags & NDR_IN) {
-		ndr_print_struct(ndr, "in", "decode_AUTHENTICATE_MESSAGE");
-		ndr->depth++;
-		ndr_print_AUTHENTICATE_MESSAGE(ndr, "authenticate", &r->in.authenticate);
-		ndr->depth--;
-	}
-	if (flags & NDR_OUT) {
-		ndr_print_struct(ndr, "out", "decode_AUTHENTICATE_MESSAGE");
-		ndr->depth++;
-		ndr->depth--;
-	}
-	ndr->depth--;
-}
-
-static enum ndr_err_code ndr_push_decode_NTLMv2_CLIENT_CHALLENGE(struct ndr_push *ndr, int flags, const struct decode_NTLMv2_CLIENT_CHALLENGE *r)
-{
-	NDR_PUSH_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_push_NTLMv2_CLIENT_CHALLENGE(ndr, NDR_SCALARS|NDR_BUFFERS, &r->in.challenge));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-static enum ndr_err_code ndr_pull_decode_NTLMv2_CLIENT_CHALLENGE(struct ndr_pull *ndr, int flags, struct decode_NTLMv2_CLIENT_CHALLENGE *r)
-{
-	NDR_PULL_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_pull_NTLMv2_CLIENT_CHALLENGE(ndr, NDR_SCALARS|NDR_BUFFERS, &r->in.challenge));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-_PUBLIC_ void ndr_print_decode_NTLMv2_CLIENT_CHALLENGE(struct ndr_print *ndr, const char *name, int flags, const struct decode_NTLMv2_CLIENT_CHALLENGE *r)
-{
-	ndr_print_struct(ndr, name, "decode_NTLMv2_CLIENT_CHALLENGE");
-	if (r == NULL) { ndr_print_null(ndr); return; }
-	ndr->depth++;
-	if (flags & NDR_SET_VALUES) {
-		ndr->flags |= LIBNDR_PRINT_SET_VALUES;
-	}
-	if (flags & NDR_IN) {
-		ndr_print_struct(ndr, "in", "decode_NTLMv2_CLIENT_CHALLENGE");
-		ndr->depth++;
-		ndr_print_NTLMv2_CLIENT_CHALLENGE(ndr, "challenge", &r->in.challenge);
-		ndr->depth--;
-	}
-	if (flags & NDR_OUT) {
-		ndr_print_struct(ndr, "out", "decode_NTLMv2_CLIENT_CHALLENGE");
-		ndr->depth++;
-		ndr->depth--;
-	}
-	ndr->depth--;
-}
-
-static enum ndr_err_code ndr_push_decode_NTLMv2_RESPONSE(struct ndr_push *ndr, int flags, const struct decode_NTLMv2_RESPONSE *r)
-{
-	NDR_PUSH_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_push_NTLMv2_RESPONSE(ndr, NDR_SCALARS|NDR_BUFFERS, &r->in.response));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-static enum ndr_err_code ndr_pull_decode_NTLMv2_RESPONSE(struct ndr_pull *ndr, int flags, struct decode_NTLMv2_RESPONSE *r)
-{
-	NDR_PULL_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_pull_NTLMv2_RESPONSE(ndr, NDR_SCALARS|NDR_BUFFERS, &r->in.response));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-_PUBLIC_ void ndr_print_decode_NTLMv2_RESPONSE(struct ndr_print *ndr, const char *name, int flags, const struct decode_NTLMv2_RESPONSE *r)
-{
-	ndr_print_struct(ndr, name, "decode_NTLMv2_RESPONSE");
-	if (r == NULL) { ndr_print_null(ndr); return; }
-	ndr->depth++;
-	if (flags & NDR_SET_VALUES) {
-		ndr->flags |= LIBNDR_PRINT_SET_VALUES;
-	}
-	if (flags & NDR_IN) {
-		ndr_print_struct(ndr, "in", "decode_NTLMv2_RESPONSE");
-		ndr->depth++;
-		ndr_print_NTLMv2_RESPONSE(ndr, "response", &r->in.response);
-		ndr->depth--;
-	}
-	if (flags & NDR_OUT) {
-		ndr_print_struct(ndr, "out", "decode_NTLMv2_RESPONSE");
-		ndr->depth++;
-		ndr->depth--;
-	}
-	ndr->depth--;
-}
+static const struct ndr_interface_public_struct ntlmssp_public_structs[] = {
+	{
+		.name = "ntlmssp_VERSION",
+		.struct_size = sizeof(struct ntlmssp_VERSION ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_ntlmssp_VERSION,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_ntlmssp_VERSION,
+		.ndr_print = (ndr_print_function_t) ndr_print_ntlmssp_VERSION,
+	},
+	{
+		.name = "NEGOTIATE_MESSAGE",
+		.struct_size = sizeof(struct NEGOTIATE_MESSAGE ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_NEGOTIATE_MESSAGE,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_NEGOTIATE_MESSAGE,
+		.ndr_print = (ndr_print_function_t) ndr_print_NEGOTIATE_MESSAGE,
+	},
+	{
+		.name = "AV_PAIR",
+		.struct_size = sizeof(struct AV_PAIR ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_AV_PAIR,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_AV_PAIR,
+		.ndr_print = (ndr_print_function_t) ndr_print_AV_PAIR,
+	},
+	{
+		.name = "AV_PAIR_LIST",
+		.struct_size = sizeof(struct AV_PAIR_LIST ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_AV_PAIR_LIST,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_AV_PAIR_LIST,
+		.ndr_print = (ndr_print_function_t) ndr_print_AV_PAIR_LIST,
+	},
+	{
+		.name = "CHALLENGE_MESSAGE",
+		.struct_size = sizeof(struct CHALLENGE_MESSAGE ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_CHALLENGE_MESSAGE,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_CHALLENGE_MESSAGE,
+		.ndr_print = (ndr_print_function_t) ndr_print_CHALLENGE_MESSAGE,
+	},
+	{
+		.name = "LM_RESPONSE",
+		.struct_size = sizeof(struct LM_RESPONSE ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_LM_RESPONSE,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_LM_RESPONSE,
+		.ndr_print = (ndr_print_function_t) ndr_print_LM_RESPONSE,
+	},
+	{
+		.name = "LMv2_RESPONSE",
+		.struct_size = sizeof(struct LMv2_RESPONSE ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_LMv2_RESPONSE,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_LMv2_RESPONSE,
+		.ndr_print = (ndr_print_function_t) ndr_print_LMv2_RESPONSE,
+	},
+	{
+		.name = "NTLM_RESPONSE",
+		.struct_size = sizeof(struct NTLM_RESPONSE ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_NTLM_RESPONSE,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_NTLM_RESPONSE,
+		.ndr_print = (ndr_print_function_t) ndr_print_NTLM_RESPONSE,
+	},
+	{
+		.name = "NTLMv2_RESPONSE",
+		.struct_size = sizeof(struct NTLMv2_RESPONSE ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_NTLMv2_RESPONSE,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_NTLMv2_RESPONSE,
+		.ndr_print = (ndr_print_function_t) ndr_print_NTLMv2_RESPONSE,
+	},
+	{
+		.name = "ntlmssp_NTLM_RESPONSE_with_len",
+		.struct_size = sizeof(union ntlmssp_NTLM_RESPONSE_with_len ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_ntlmssp_NTLM_RESPONSE_with_len,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_ntlmssp_NTLM_RESPONSE_with_len,
+		.ndr_print = (ndr_print_function_t) ndr_print_ntlmssp_NTLM_RESPONSE_with_len,
+	},
+	{
+		.name = "AUTHENTICATE_MESSAGE",
+		.struct_size = sizeof(struct AUTHENTICATE_MESSAGE ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_AUTHENTICATE_MESSAGE,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_AUTHENTICATE_MESSAGE,
+		.ndr_print = (ndr_print_function_t) ndr_print_AUTHENTICATE_MESSAGE,
+	},
+	{
+		.name = "NTLMSSP_MESSAGE_SIGNATURE",
+		.struct_size = sizeof(struct NTLMSSP_MESSAGE_SIGNATURE ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_NTLMSSP_MESSAGE_SIGNATURE,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_NTLMSSP_MESSAGE_SIGNATURE,
+		.ndr_print = (ndr_print_function_t) ndr_print_NTLMSSP_MESSAGE_SIGNATURE,
+	},
+	{
+		.name = "NTLMSSP_MESSAGE_SIGNATURE_NTLMv2",
+		.struct_size = sizeof(struct NTLMSSP_MESSAGE_SIGNATURE_NTLMv2 ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_NTLMSSP_MESSAGE_SIGNATURE_NTLMv2,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_NTLMSSP_MESSAGE_SIGNATURE_NTLMv2,
+		.ndr_print = (ndr_print_function_t) ndr_print_NTLMSSP_MESSAGE_SIGNATURE_NTLMv2,
+	},
+	{ .name = NULL }
+};
 
 static const struct ndr_interface_call ntlmssp_calls[] = {
-	{
-		"decode_NEGOTIATE_MESSAGE",
-		sizeof(struct decode_NEGOTIATE_MESSAGE),
-		(ndr_push_flags_fn_t) ndr_push_decode_NEGOTIATE_MESSAGE,
-		(ndr_pull_flags_fn_t) ndr_pull_decode_NEGOTIATE_MESSAGE,
-		(ndr_print_function_t) ndr_print_decode_NEGOTIATE_MESSAGE,
-		{ 0, NULL },
-		{ 0, NULL },
-	},
-	{
-		"decode_CHALLENGE_MESSAGE",
-		sizeof(struct decode_CHALLENGE_MESSAGE),
-		(ndr_push_flags_fn_t) ndr_push_decode_CHALLENGE_MESSAGE,
-		(ndr_pull_flags_fn_t) ndr_pull_decode_CHALLENGE_MESSAGE,
-		(ndr_print_function_t) ndr_print_decode_CHALLENGE_MESSAGE,
-		{ 0, NULL },
-		{ 0, NULL },
-	},
-	{
-		"decode_AUTHENTICATE_MESSAGE",
-		sizeof(struct decode_AUTHENTICATE_MESSAGE),
-		(ndr_push_flags_fn_t) ndr_push_decode_AUTHENTICATE_MESSAGE,
-		(ndr_pull_flags_fn_t) ndr_pull_decode_AUTHENTICATE_MESSAGE,
-		(ndr_print_function_t) ndr_print_decode_AUTHENTICATE_MESSAGE,
-		{ 0, NULL },
-		{ 0, NULL },
-	},
-	{
-		"decode_NTLMv2_CLIENT_CHALLENGE",
-		sizeof(struct decode_NTLMv2_CLIENT_CHALLENGE),
-		(ndr_push_flags_fn_t) ndr_push_decode_NTLMv2_CLIENT_CHALLENGE,
-		(ndr_pull_flags_fn_t) ndr_pull_decode_NTLMv2_CLIENT_CHALLENGE,
-		(ndr_print_function_t) ndr_print_decode_NTLMv2_CLIENT_CHALLENGE,
-		{ 0, NULL },
-		{ 0, NULL },
-	},
-	{
-		"decode_NTLMv2_RESPONSE",
-		sizeof(struct decode_NTLMv2_RESPONSE),
-		(ndr_push_flags_fn_t) ndr_push_decode_NTLMv2_RESPONSE,
-		(ndr_pull_flags_fn_t) ndr_pull_decode_NTLMv2_RESPONSE,
-		(ndr_print_function_t) ndr_print_decode_NTLMv2_RESPONSE,
-		{ 0, NULL },
-		{ 0, NULL },
-	},
 	{ .name = NULL }
 };
 
@@ -2555,8 +2385,10 @@ const struct ndr_interface_table ndr_table_ntlmssp = {
 		NDR_NTLMSSP_VERSION
 	},
 	.helpstring	= NDR_NTLMSSP_HELPSTRING,
-	.num_calls	= 5,
+	.num_calls	= 0,
 	.calls		= ntlmssp_calls,
+	.num_public_structs	= 13,
+	.public_structs		= ntlmssp_public_structs,
 	.endpoints	= &ntlmssp_endpoints,
 	.authservices	= &ntlmssp_authservices
 };

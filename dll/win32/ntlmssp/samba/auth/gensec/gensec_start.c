@@ -1015,7 +1015,7 @@ int gensec_setting_int(struct gensec_settings *settings, const char *mechanism, 
 
 bool gensec_setting_bool(struct gensec_settings *settings, const char *mechanism, const char *name, bool default_value)
 {
-    return lpcfg_parm_bool(settings->lp_ctx, NULL, mechanism, name, default_value);*/
+	return lpcfg_parm_bool(settings->lp_ctx, NULL, mechanism, name, default_value);
 }
 
 /*

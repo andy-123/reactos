@@ -1,4 +1,4 @@
-/*
+/* 
    Unix SMB/CIFS implementation.
    Character set conversion Extensions
    Copyright (C) Igor Vergeichik <iverg@mail.ru> 2001

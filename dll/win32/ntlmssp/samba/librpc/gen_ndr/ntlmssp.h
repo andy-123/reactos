@@ -309,47 +309,6 @@ struct NTLMSSP_MESSAGE_SIGNATURE_NTLMv2 {
 	uint32_t SeqNum;
 }/* [flag(LIBNDR_PRINT_ARRAY_HEX),public] */;
 
-
-struct decode_NEGOTIATE_MESSAGE {
-	struct {
-		struct NEGOTIATE_MESSAGE negotiate;
-	} in;
-
-};
-
-
-struct decode_CHALLENGE_MESSAGE {
-	struct {
-		struct CHALLENGE_MESSAGE challenge;
-	} in;
-
-};
-
-
-struct decode_AUTHENTICATE_MESSAGE {
-	struct {
-		struct AUTHENTICATE_MESSAGE authenticate;
-	} in;
-
-};
-
-
-struct decode_NTLMv2_CLIENT_CHALLENGE {
-	struct {
-		struct NTLMv2_CLIENT_CHALLENGE challenge;
-	} in;
-
-};
-
-
-struct decode_NTLMv2_RESPONSE {
-	struct {
-		struct NTLMv2_RESPONSE response;
-	} in;
-
-};
-
 #endif /* _HEADER_ntlmssp */
 #endif /* _PIDL_HEADER_ntlmssp */
-
 #endif /* __REACTOS__ */

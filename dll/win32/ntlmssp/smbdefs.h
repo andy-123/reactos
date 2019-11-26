@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 #ifdef _MSC_VER
 #ifdef bool
 #undef bool

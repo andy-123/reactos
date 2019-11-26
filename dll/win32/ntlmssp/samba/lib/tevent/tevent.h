@@ -38,7 +38,6 @@
 #include <sys/time.h>
 #include <stdbool.h>
 
-
 struct tevent_context;
 struct tevent_ops;
 struct tevent_fd;
@@ -1170,7 +1169,6 @@ bool _tevent_req_error(struct tevent_req *req,
 	_tevent_req_error(req, error, __location__)
 #endif
 
-
 #ifdef DOXYGEN
 /**
  * @brief Helper function for nomem check.
@@ -1719,7 +1717,7 @@ struct timeval tevent_timeval_add(const struct timeval *tv, uint32_t secs,
  *
  * @param[in]  usecs    The microseconds of the offset from now.
  *
- * @return              A timval with the given offset in the future.
+ * @return              A timeval with the given offset in the future.
  */
 struct timeval tevent_timeval_current_ofs(uint32_t secs, uint32_t usecs);
 

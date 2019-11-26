@@ -95,7 +95,7 @@ static NTSTATUS authsam_password_ok(struct auth4_context *auth_context,
 					     lm_pwd, nt_pwd);
 		NT_STATUS_NOT_OK_RETURN(status);
 		break;
-
+		
 	case AUTH_PASSWORD_RESPONSE:
 		status = ntlm_password_check(mem_ctx, 
 					     lpcfg_lanman_auth(auth_context->lp_ctx),

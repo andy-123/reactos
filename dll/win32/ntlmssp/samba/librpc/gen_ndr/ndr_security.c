@@ -1228,219 +1228,123 @@ _PUBLIC_ void ndr_print_security_autoinherit(struct ndr_print *ndr, const char *
 	ndr->depth--;
 }
 
-static enum ndr_err_code ndr_push_decode_security_descriptor(struct ndr_push *ndr, int flags, const struct decode_security_descriptor *r)
-{
-	NDR_PUSH_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_push_security_descriptor(ndr, NDR_SCALARS|NDR_BUFFERS, &r->in.sd));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-static enum ndr_err_code ndr_pull_decode_security_descriptor(struct ndr_pull *ndr, int flags, struct decode_security_descriptor *r)
-{
-	NDR_PULL_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_pull_security_descriptor(ndr, NDR_SCALARS|NDR_BUFFERS, &r->in.sd));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-_PUBLIC_ void ndr_print_decode_security_descriptor(struct ndr_print *ndr, const char *name, int flags, const struct decode_security_descriptor *r)
-{
-	ndr_print_struct(ndr, name, "decode_security_descriptor");
-	if (r == NULL) { ndr_print_null(ndr); return; }
-	ndr->depth++;
-	if (flags & NDR_SET_VALUES) {
-		ndr->flags |= LIBNDR_PRINT_SET_VALUES;
-	}
-	if (flags & NDR_IN) {
-		ndr_print_struct(ndr, "in", "decode_security_descriptor");
-		ndr->depth++;
-		ndr_print_security_descriptor(ndr, "sd", &r->in.sd);
-		ndr->depth--;
-	}
-	if (flags & NDR_OUT) {
-		ndr_print_struct(ndr, "out", "decode_security_descriptor");
-		ndr->depth++;
-		ndr->depth--;
-	}
-	ndr->depth--;
-}
-
-static enum ndr_err_code ndr_push_decode_sec_desc_buf(struct ndr_push *ndr, int flags, const struct decode_sec_desc_buf *r)
-{
-	NDR_PUSH_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_push_sec_desc_buf(ndr, NDR_SCALARS|NDR_BUFFERS, &r->in.sd_buf));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-static enum ndr_err_code ndr_pull_decode_sec_desc_buf(struct ndr_pull *ndr, int flags, struct decode_sec_desc_buf *r)
-{
-	NDR_PULL_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_pull_sec_desc_buf(ndr, NDR_SCALARS|NDR_BUFFERS, &r->in.sd_buf));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-_PUBLIC_ void ndr_print_decode_sec_desc_buf(struct ndr_print *ndr, const char *name, int flags, const struct decode_sec_desc_buf *r)
-{
-	ndr_print_struct(ndr, name, "decode_sec_desc_buf");
-	if (r == NULL) { ndr_print_null(ndr); return; }
-	ndr->depth++;
-	if (flags & NDR_SET_VALUES) {
-		ndr->flags |= LIBNDR_PRINT_SET_VALUES;
-	}
-	if (flags & NDR_IN) {
-		ndr_print_struct(ndr, "in", "decode_sec_desc_buf");
-		ndr->depth++;
-		ndr_print_sec_desc_buf(ndr, "sd_buf", &r->in.sd_buf);
-		ndr->depth--;
-	}
-	if (flags & NDR_OUT) {
-		ndr_print_struct(ndr, "out", "decode_sec_desc_buf");
-		ndr->depth++;
-		ndr->depth--;
-	}
-	ndr->depth--;
-}
-
-static enum ndr_err_code ndr_push_decode_security_token(struct ndr_push *ndr, int flags, const struct decode_security_token *r)
-{
-	NDR_PUSH_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_push_security_token(ndr, NDR_SCALARS, &r->in.token));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-static enum ndr_err_code ndr_pull_decode_security_token(struct ndr_pull *ndr, int flags, struct decode_security_token *r)
-{
-	NDR_PULL_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_pull_security_token(ndr, NDR_SCALARS, &r->in.token));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-_PUBLIC_ void ndr_print_decode_security_token(struct ndr_print *ndr, const char *name, int flags, const struct decode_security_token *r)
-{
-	ndr_print_struct(ndr, name, "decode_security_token");
-	if (r == NULL) { ndr_print_null(ndr); return; }
-	ndr->depth++;
-	if (flags & NDR_SET_VALUES) {
-		ndr->flags |= LIBNDR_PRINT_SET_VALUES;
-	}
-	if (flags & NDR_IN) {
-		ndr_print_struct(ndr, "in", "decode_security_token");
-		ndr->depth++;
-		ndr_print_security_token(ndr, "token", &r->in.token);
-		ndr->depth--;
-	}
-	if (flags & NDR_OUT) {
-		ndr_print_struct(ndr, "out", "decode_security_token");
-		ndr->depth++;
-		ndr->depth--;
-	}
-	ndr->depth--;
-}
-
-static enum ndr_err_code ndr_push_decode_security_unix_token(struct ndr_push *ndr, int flags, const struct decode_security_unix_token *r)
-{
-	NDR_PUSH_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_push_security_unix_token(ndr, NDR_SCALARS, &r->in.unix_token));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-static enum ndr_err_code ndr_pull_decode_security_unix_token(struct ndr_pull *ndr, int flags, struct decode_security_unix_token *r)
-{
-	NDR_PULL_CHECK_FN_FLAGS(ndr, flags);
-	if (flags & NDR_IN) {
-		NDR_CHECK(ndr_pull_security_unix_token(ndr, NDR_SCALARS, &r->in.unix_token));
-	}
-	if (flags & NDR_OUT) {
-	}
-	return NDR_ERR_SUCCESS;
-}
-
-_PUBLIC_ void ndr_print_decode_security_unix_token(struct ndr_print *ndr, const char *name, int flags, const struct decode_security_unix_token *r)
-{
-	ndr_print_struct(ndr, name, "decode_security_unix_token");
-	if (r == NULL) { ndr_print_null(ndr); return; }
-	ndr->depth++;
-	if (flags & NDR_SET_VALUES) {
-		ndr->flags |= LIBNDR_PRINT_SET_VALUES;
-	}
-	if (flags & NDR_IN) {
-		ndr_print_struct(ndr, "in", "decode_security_unix_token");
-		ndr->depth++;
-		ndr_print_security_unix_token(ndr, "unix_token", &r->in.unix_token);
-		ndr->depth--;
-	}
-	if (flags & NDR_OUT) {
-		ndr_print_struct(ndr, "out", "decode_security_unix_token");
-		ndr->depth++;
-		ndr->depth--;
-	}
-	ndr->depth--;
-}
+static const struct ndr_interface_public_struct security_public_structs[] = {
+	{
+		.name = "dom_sid",
+		.struct_size = sizeof(struct dom_sid ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_dom_sid,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_dom_sid,
+		.ndr_print = (ndr_print_function_t) ndr_print_dom_sid,
+	},
+	{
+		.name = "security_ace_flags",
+		.struct_size = sizeof(uint8_t ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_security_ace_flags,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_security_ace_flags,
+		.ndr_print = (ndr_print_function_t) ndr_print_security_ace_flags,
+	},
+	{
+		.name = "security_ace_type",
+		.struct_size = sizeof(enum security_ace_type ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_security_ace_type,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_security_ace_type,
+		.ndr_print = (ndr_print_function_t) ndr_print_security_ace_type,
+	},
+	{
+		.name = "security_ace_object_ctr",
+		.struct_size = sizeof(union security_ace_object_ctr ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_security_ace_object_ctr,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_security_ace_object_ctr,
+		.ndr_print = (ndr_print_function_t) ndr_print_security_ace_object_ctr,
+	},
+	{
+		.name = "security_ace",
+		.struct_size = sizeof(struct security_ace ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_security_ace,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_security_ace,
+		.ndr_print = (ndr_print_function_t) ndr_print_security_ace,
+	},
+	{
+		.name = "security_acl",
+		.struct_size = sizeof(struct security_acl ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_security_acl,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_security_acl,
+		.ndr_print = (ndr_print_function_t) ndr_print_security_acl,
+	},
+	{
+		.name = "security_descriptor_revision",
+		.struct_size = sizeof(enum security_descriptor_revision ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_security_descriptor_revision,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_security_descriptor_revision,
+		.ndr_print = (ndr_print_function_t) ndr_print_security_descriptor_revision,
+	},
+	{
+		.name = "security_descriptor_type",
+		.struct_size = sizeof(uint16_t ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_security_descriptor_type,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_security_descriptor_type,
+		.ndr_print = (ndr_print_function_t) ndr_print_security_descriptor_type,
+	},
+	{
+		.name = "security_descriptor",
+		.struct_size = sizeof(struct security_descriptor ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_security_descriptor,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_security_descriptor,
+		.ndr_print = (ndr_print_function_t) ndr_print_security_descriptor,
+	},
+	{
+		.name = "sec_desc_buf",
+		.struct_size = sizeof(struct sec_desc_buf ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_sec_desc_buf,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_sec_desc_buf,
+		.ndr_print = (ndr_print_function_t) ndr_print_sec_desc_buf,
+	},
+	{
+		.name = "security_token",
+		.struct_size = sizeof(struct security_token ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_security_token,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_security_token,
+		.ndr_print = (ndr_print_function_t) ndr_print_security_token,
+	},
+	{
+		.name = "security_unix_token",
+		.struct_size = sizeof(struct security_unix_token ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_security_unix_token,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_security_unix_token,
+		.ndr_print = (ndr_print_function_t) ndr_print_security_unix_token,
+	},
+	{
+		.name = "security_secinfo",
+		.struct_size = sizeof(uint32_t ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_security_secinfo,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_security_secinfo,
+		.ndr_print = (ndr_print_function_t) ndr_print_security_secinfo,
+	},
+	{
+		.name = "LSAP_TOKEN_INFO_INTEGRITY",
+		.struct_size = sizeof(struct LSAP_TOKEN_INFO_INTEGRITY ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_LSAP_TOKEN_INFO_INTEGRITY,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_LSAP_TOKEN_INFO_INTEGRITY,
+		.ndr_print = (ndr_print_function_t) ndr_print_LSAP_TOKEN_INFO_INTEGRITY,
+	},
+	{
+		.name = "kerb_EncTypes",
+		.struct_size = sizeof(uint32_t ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_kerb_EncTypes,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_kerb_EncTypes,
+		.ndr_print = (ndr_print_function_t) ndr_print_kerb_EncTypes,
+	},
+	{
+		.name = "security_autoinherit",
+		.struct_size = sizeof(uint32_t ),
+		.ndr_push = (ndr_push_flags_fn_t) ndr_push_security_autoinherit,
+		.ndr_pull = (ndr_pull_flags_fn_t) ndr_pull_security_autoinherit,
+		.ndr_print = (ndr_print_function_t) ndr_print_security_autoinherit,
+	},
+	{ .name = NULL }
+};
 
 static const struct ndr_interface_call security_calls[] = {
-	{
-		"decode_security_descriptor",
-		sizeof(struct decode_security_descriptor),
-		(ndr_push_flags_fn_t) ndr_push_decode_security_descriptor,
-		(ndr_pull_flags_fn_t) ndr_pull_decode_security_descriptor,
-		(ndr_print_function_t) ndr_print_decode_security_descriptor,
-		{ 0, NULL },
-		{ 0, NULL },
-	},
-	{
-		"decode_sec_desc_buf",
-		sizeof(struct decode_sec_desc_buf),
-		(ndr_push_flags_fn_t) ndr_push_decode_sec_desc_buf,
-		(ndr_pull_flags_fn_t) ndr_pull_decode_sec_desc_buf,
-		(ndr_print_function_t) ndr_print_decode_sec_desc_buf,
-		{ 0, NULL },
-		{ 0, NULL },
-	},
-	{
-		"decode_security_token",
-		sizeof(struct decode_security_token),
-		(ndr_push_flags_fn_t) ndr_push_decode_security_token,
-		(ndr_pull_flags_fn_t) ndr_pull_decode_security_token,
-		(ndr_print_function_t) ndr_print_decode_security_token,
-		{ 0, NULL },
-		{ 0, NULL },
-	},
-	{
-		"decode_security_unix_token",
-		sizeof(struct decode_security_unix_token),
-		(ndr_push_flags_fn_t) ndr_push_decode_security_unix_token,
-		(ndr_pull_flags_fn_t) ndr_pull_decode_security_unix_token,
-		(ndr_print_function_t) ndr_print_decode_security_unix_token,
-		{ 0, NULL },
-		{ 0, NULL },
-	},
 	{ .name = NULL }
 };
 
@@ -1470,8 +1374,10 @@ const struct ndr_interface_table ndr_table_security = {
 		NDR_SECURITY_VERSION
 	},
 	.helpstring	= NDR_SECURITY_HELPSTRING,
-	.num_calls	= 4,
+	.num_calls	= 0,
 	.calls		= security_calls,
+	.num_public_structs	= 16,
+	.public_structs		= security_public_structs,
 	.endpoints	= &security_endpoints,
 	.authservices	= &security_authservices
 };

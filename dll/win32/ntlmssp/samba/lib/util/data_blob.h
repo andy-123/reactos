@@ -124,7 +124,6 @@ _PUBLIC_ DATA_BLOB data_blob_const(const void *p, size_t length);
 /**
   realloc a data_blob
 **/
-//_PUBLIC_ bool data_blob_realloc(TALLOC_CTX *mem_ctx, DATA_BLOB *blob, size_t length);
 _PUBLIC_ bool data_blob_realloc(TALLOC_CTX *mem_ctx, DATA_BLOB *blob, size_t length);
 
 /**

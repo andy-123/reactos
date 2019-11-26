@@ -49,7 +49,7 @@
 bool dbgtext_va(const char *, va_list ap) PRINTF_ATTRIBUTE(1,0);
 bool dbgtext( const char *, ... ) PRINTF_ATTRIBUTE(1,2);
 bool dbghdrclass( int level, int cls, const char *location, const char *func);
-bool dbghdr( int level, const char *location, const char *func);
+bool dbgsetclass(int level, int cls);
 
 /*
  * Define all new debug classes here. A class is represented by an entry in
@@ -209,17 +209,19 @@ void debuglevel_set_class(size_t idx, int level);
 #define DEBUGC( dbgc_class, level, body ) \
   (void)( ((level) <= MAX_DEBUG_LEVEL) && \
        unlikely(debuglevel_get_class(dbgc_class) >= (level))             \
-       && (dbghdrclass( level, DBGC_CLASS, __location__, __FUNCTION__ )) \
+       && (dbghdrclass( level, dbgc_class, __location__, __FUNCTION__ )) \
        && (dbgtext body) )
 
 #define DEBUGADD( level, body ) \
   (void)( ((level) <= MAX_DEBUG_LEVEL) && \
-	  unlikely(debuglevel_get_class(DBGC_CLASS) >= (level))	\
+       unlikely(debuglevel_get_class(DBGC_CLASS) >= (level)) \
+       && (dbgsetclass(level, DBGC_CLASS))                   \
        && (dbgtext body) )
 
 #define DEBUGADDC( dbgc_class, level, body ) \
   (void)( ((level) <= MAX_DEBUG_LEVEL) && \
-          unlikely((debuglevel_get_class(dbgc_class) >= (level))) \
+       unlikely((debuglevel_get_class(dbgc_class) >= (level))) \
+       && (dbgsetclass(level, dbgc_class))                     \
        && (dbgtext body) )
 
 /* Print a separator to the debug log. */
@@ -336,7 +338,6 @@ void force_check_log_size( void );
 bool need_to_check_log_size( void );
 void check_log_size( void );
 void dbgflush( void );
-bool dbghdrclass(int level, int cls, const char *location, const char *func);
 bool debug_get_output_is_stderr(void);
 bool debug_get_output_is_stdout(void);
 void debug_schedule_reopen_logs(void);

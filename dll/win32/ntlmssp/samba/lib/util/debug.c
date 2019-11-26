@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <smbhelper.h>
 #include <samba/lib/talloc/talloc.h>
 #include "smbdefs.h"
 #include "debug.h"
@@ -97,7 +98,7 @@
 static struct {
 	bool initialized;
 	enum debug_logtype logtype; /* The type of logging we are doing: eg stdout, file, stderr */
-	const char *prog_name;
+	char prog_name[255];
 	bool reopening_logs;
 	bool schedule_reopen_logs;
 
@@ -114,7 +115,7 @@ static struct {
 #else
     /*.initialized = */false,
     /*.debug_logtype = */DEBUG_STDOUT,
-    /*.prog_name = */NULL,
+    /*.prog_name = */"",
     /*.reopening_logs =*/true,
     /*.schedule_reopen_logs =*/true,
 	/*.settings =*/ {
@@ -185,16 +186,13 @@ static const char *default_classname_table[] = {
  */
 static struct debug_class debug_class_list_initial[ARRAY_SIZE(default_classname_table)] = {
 	/*[DBGC_ALL] = (struct debug_class)*/ { /*.fd = */ DEBUGLEVEL, NULL, 2 },
-	/*[DBGC_ALL] = (struct debug_class)*/ { /*.fd = */ DEBUGLEVEL, NULL, 2 },
 };
 
 static size_t debug_num_classes = 0;
 static struct debug_class *dbgc_config = debug_class_list_initial;
 
-#ifndef __REACTOS__
 static int current_msg_level = 0;
 static int current_msg_class = 0;
-#endif
 
 #if defined(WITH_SYSLOG) || defined(HAVE_LIBSYSTEMD_JOURNAL) || defined(HAVE_LIBSYSTEMD)
 static int debug_level_to_priority(int level)
@@ -255,11 +253,15 @@ static void debug_syslog_reload(bool enabled, bool previously_enabled,
 				const char *prog_name, char *option)
 {
 	if (enabled && !previously_enabled) {
+		const char *ident = NULL;
+		if ((prog_name != NULL) && (prog_name[0] != '\0')) {
+			ident = prog_name;
+		}
 #ifdef LOG_DAEMON
-		openlog(prog_name, LOG_PID, SYSLOG_FACILITY);
+		openlog(ident, LOG_PID, SYSLOG_FACILITY);
 #else
 		/* for old systems that have no facility codes. */
-		openlog(prog_name, LOG_PID );
+		openlog(ident, LOG_PID);
 #endif
 		return;
 	}
@@ -665,6 +667,7 @@ static char format_bufr[FORMAT_BUFR_SIZE];
 static size_t     format_pos     = 0;
 #ifndef __REACTOS__
 static bool    log_overflow   = false;
+#endif
 
 /*
  * Define all the debug class selection names here. Names *MUST NOT* contain
@@ -673,7 +676,6 @@ static bool    log_overflow   = false;
  */
 
 static char **classname_table = NULL;
-#endif
 
 
 /* -------------------------------------------------------------------------- **
@@ -729,6 +731,7 @@ char *debug_list_class_names_and_levels(void)
 	}
 	return buf;
 }
+#endif
 
 /****************************************************************************
  Utility to translate names to debug class index's (internal version).
@@ -738,15 +741,18 @@ static int debug_lookup_classname_int(const char* classname)
 {
 	size_t i;
 
-	if (!classname) return -1;
+	if (classname == NULL) {
+		return -1;
+	}
 
 	for (i=0; i < debug_num_classes; i++) {
-		if (strcmp(classname, classname_table[i])==0)
+		char *entry = classname_table[i];
+		if (entry != NULL && strcmp(classname, entry)==0) {
 			return i;
+		}
 	}
 	return -1;
 }
-#endif
 
 /****************************************************************************
  Add a new debug class to the system.
@@ -756,9 +762,7 @@ int debug_add_class(const char *classname)
 {
 	int ndx;
 	struct debug_class *new_class_list = NULL;
-#ifndef __REACTOS__
 	char **new_name_list;
-#endif
 	int default_level;
 
 	if (classname == NULL) {
@@ -768,12 +772,10 @@ int debug_add_class(const char *classname)
 	/* check the init has yet been called */
 	debug_init();
 
-#ifndef __REACTOS__
 	ndx = debug_lookup_classname_int(classname);
 	if (ndx >= 0) {
 		return ndx;
 	}
-#endif
 	ndx = debug_num_classes;
 
 	if (dbgc_config == debug_class_list_initial) {
@@ -806,7 +808,6 @@ int debug_add_class(const char *classname)
     dbgc_config[ndx].loglevel = default_level;
 #endif
 
-#ifndef __REACTOS__
 	new_name_list = talloc_realloc(NULL, classname_table, char *, ndx + 1);
 	if (new_name_list == NULL) {
 		return -1;
@@ -819,7 +820,6 @@ int debug_add_class(const char *classname)
 	}
 
 	debug_num_classes = ndx + 1;
-#endif
 
 	return ndx;
 }
@@ -833,7 +833,7 @@ static int debug_lookup_classname(const char *classname)
 {
 	int ndx;
 
-	if (!classname || !*classname)
+	if (classname == NULL || !*classname)
 		return -1;
 
 	ndx = debug_lookup_classname_int(classname);
@@ -1067,7 +1067,7 @@ void setup_logging(const char *prog_name, enum debug_logtype new_logtype)
 			prog_name = p + 1;
 		}
 
-		state.prog_name = prog_name;
+		strlcpy(state.prog_name, prog_name, sizeof(state.prog_name));
 	}
 #ifndef __REACTOS__
 	reopen_logs_internal();
@@ -1532,6 +1532,7 @@ static void format_debug_text( const char *msg )
 			(void)Debug1( " +>\n" );
 		}
 	}
+
 	/* Just to be safe... */
 	format_bufr[format_pos] = '\0';
 }
@@ -1547,6 +1548,18 @@ static void format_debug_text( const char *msg )
 void dbgflush( void )
 {
 	bufr_print();
+}
+#endif
+
+bool dbgsetclass(int level, int cls)
+{
+	/* Set current_msg_level. */
+	current_msg_level = level;
+
+	/* Set current message class */
+	current_msg_class = cls;
+
+	return true;
 }
 
 /***************************************************************************
@@ -1569,7 +1582,6 @@ void dbgflush( void )
  Notes:  This function takes care of setting current_msg_level.
 
 ****************************************************************************/
-#endif
 
 bool dbghdrclass(int level, int cls, const char *location, const char *func)
 {
@@ -1597,11 +1609,7 @@ bool dbghdrclass(int level, int cls, const char *location, const char *func)
 		return( true );
 	}
 
-	/* Set current_msg_level. */
-	current_msg_level = level;
-
-	/* Set current message class */
-	current_msg_class = cls;
+	dbgsetclass(level, cls);
 
 	/* Don't print a header if we're logging to stdout. */
 	if ( state.logtype != DEBUG_FILE ) {
