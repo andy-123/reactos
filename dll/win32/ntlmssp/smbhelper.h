@@ -280,13 +280,13 @@ int gnutls_hash(
     IN size_t textlen);
 void gnutls_hash_deinit(
     IN gnutls_hash_hd_t handle,
-    IN void *digest);
+    OUT void *digest);
 
 int gnutls_hash_fast(
-    IN ULONG DIG_mode,
-    IN BYTE *dataIn,
-    IN ULONG dataLen,
-    OUT BYTE dataOut[16]);
+    IN gnutls_digest_algorithm_t algorithm,
+    IN const void *text,
+    IN size_t textlen,
+    OUT void *digest);
 
 int gnutls_hmac_fast(
     IN gnutls_mac_algorithm_t algorithm,

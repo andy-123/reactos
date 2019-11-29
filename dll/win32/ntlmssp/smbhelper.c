@@ -1,7 +1,9 @@
+#include "smbhelper.h"
 #include "smbincludes.h"
 #include "samba/libcli/auth/ntlm_check.h"
 #include "samba/lib/param/loadparm.h"
 #include "samba/auth/credentials/credentials_internal.h"
+#include "samba/lib/talloc/talloc.h"
 #include "ciphers.h"
 
 #include "wine/debug.h"
@@ -107,11 +109,12 @@ int gnutls_hash_init(
 {
     if (algorithm == GNUTLS_DIG_MD5)
     {
-        *dig = NtlmAllocate(sizeof(_gnutls_hash_hd_t));
+        *dig = talloc(NULL, _gnutls_hash_hd_t);
         (*dig)->algo = algorithm;
         MD5Init(&(*dig)->ctx);
         return 0;
     }
+    ERR("gnutls_hash_init: unknown algo!\n");
     return -1;
 }
 
@@ -125,40 +128,47 @@ int gnutls_hash(
         MD5Update(&handle->ctx, text, textlen);
         return 0;
     }
+    ERR("gnutls_hash: unknown algo!\n");
     return -1;
 }
 
 void gnutls_hash_deinit(
     IN gnutls_hash_hd_t handle,
-    IN void *digest)
+    OUT void *digest)
 {
-    if (digest)
+    if (handle->algo == GNUTLS_DIG_MD5)
     {
-        MD5Final(&handle->ctx);
-        memcpy(digest, handle->ctx.digest, MD5_DIGEST_LENGTH);
+        if (digest)
+        {
+            MD5Final(&handle->ctx);
+            memcpy(digest, handle->ctx.digest, MD5_DIGEST_LENGTH);
+        }
+        talloc_free((void*)handle);
+        return;
     }
-    NtlmFree((void*)handle);
+    ERR("gnutls_hash_fast: unknown algo!\n");
+    talloc_free((void*)handle);
 }
 
 
 
 int gnutls_hash_fast(
-    IN ULONG DIG_mode,
-    IN BYTE *dataIn,
-    IN ULONG dataLen,
-    OUT BYTE dataOut[16])
+    IN gnutls_digest_algorithm_t algorithm,
+    IN const void *text,
+    IN size_t textlen,
+    OUT void *digest)
 {
-    if (DIG_mode == GNUTLS_DIG_MD5)
+    if (algorithm == GNUTLS_DIG_MD5)
     {
         MD5_CTX md5ctx;
 
         MD5Init(&md5ctx);
-        MD5Update(&md5ctx, dataIn, dataLen);
+        MD5Update(&md5ctx, text, textlen);
         MD5Final(&md5ctx);
-        memcpy(dataOut, md5ctx.digest, MD5_DIGEST_LENGTH);
+        memcpy(digest, md5ctx.digest, MD5_DIGEST_LENGTH);
         return 0;
     }
-    ERR("gnutls_hash_fast\n");
+    ERR("gnutls_hash_fast: unknown algo!\n");
     return -1;
 }
 
@@ -172,15 +182,15 @@ int gnutls_cipher_init(
     {
         if (key->size != 16)
         {
-            ERR("expected key-size 16, got size %i\n", key->size);
+            ERR("gnutls_cipher_init: expected key-size 16, got size %i\n", key->size);
             return -1;
         }
-        *handle = NtlmAllocate(sizeof(_gnutls_cipher_hd_t));
+        *handle = talloc(NULL, _gnutls_cipher_hd_t);
         (*handle)->cipher = cipher;
         (*handle)->key = key;
         return 0;
     }
-    ERR("gnutls_cipher_init\n");
+    ERR("gnutls_cipher_init: unknown algo!\n");
     return -1;
 }
 
@@ -194,14 +204,20 @@ int gnutls_cipher_encrypt(
         arcfour_crypt(text, handle->key->data, textlen);
         return 0;
     }
-    ERR("gnutls_cipher_encrypt\n");
+    ERR("gnutls_cipher_encrypt: unknown algo!\n");
     return -1;
 }
 
 void gnutls_cipher_deinit(
     IN gnutls_cipher_hd_t handle)
 {
-    NtlmFree((void*)handle);
+    if (handle->cipher == GNUTLS_CIPHER_ARCFOUR_128)
+    {
+        talloc_free((void*)handle);
+        return;
+    }
+    ERR("gnutls_hmac_deinit: unknown algo!\n");
+    talloc_free((void*)handle);
 }
 
 int gnutls_hmac_fast(
@@ -217,7 +233,7 @@ int gnutls_hmac_fast(
         HMAC_MD5(key, keylen, text, textlen, digest);
         return 0;
     }
-    ERR("gnutls_hmac_fast\n");
+    ERR("gnutls_hmac_fast: unknown algo!\n");
     return -1;
 }
 
@@ -229,12 +245,12 @@ int gnutls_hmac_init(
 {
     if (algorithm == GNUTLS_MAC_MD5)
     {
-        *dig = NtlmAllocate(sizeof(_gnutls_hmac_hd_t));
+        *dig = talloc(NULL, _gnutls_hmac_hd_t);
         (*dig)->algo = algorithm;
         HMACMD5Init(&(*dig)->md5ctx, key, keylen);
         return 0;
     }
-    ERR("gnutls_hmac_init\n");
+    ERR("gnutls_hmac_init: unknown algo!\n");
     return -1;
 }
 
@@ -247,11 +263,11 @@ void gnutls_hmac_deinit(
         if (digest)
             HMACMD5Final(&handle->md5ctx, digest);
 
-        NtlmFree((void*)handle);
+        talloc_free((void*)handle);
         return;
     }
-    NtlmFree((void*)handle);
-    ERR("gnutls_hmac_deinit\n");
+    ERR("gnutls_hmac_deinit: unknown algo!\n");
+    talloc_free((void*)handle);
 }
 
 int gnutls_hmac(
@@ -264,7 +280,7 @@ int gnutls_hmac(
         HMACMD5Update(&handle->md5ctx, text, textlen);
         return 0;
     }
-    ERR("gnutls_hmac\n");
+    ERR("gnutls_hmac: unknown algo!\n");
     return -1;
 }
 
