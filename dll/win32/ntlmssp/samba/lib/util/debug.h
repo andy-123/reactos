@@ -228,7 +228,6 @@ void debuglevel_set_class(size_t idx, int level);
 #define DEBUGSEP(level)\
 	DEBUG((level),("===============================================================\n"))
 
-#ifndef __REACTOS__
 /* Prefix messages with the function name */
 #define DBG_PREFIX(level, body ) \
 	(void)( ((level) <= MAX_DEBUG_LEVEL) &&			\
@@ -236,15 +235,6 @@ void debuglevel_set_class(size_t idx, int level);
 		&& (dbghdrclass(level, DBGC_CLASS, __location__, __func__ )) \
 		&& (dbgtext("%s: ", __func__))				\
 		&& (dbgtext body) )
-#else
-/* Prefix messages with the function name */
-#define DBG_PREFIX(level, body ) \
-	(void)( ((level) <= MAX_DEBUG_LEVEL) &&			\
-		unlikely(debuglevel_get_class(DBGC_CLASS) >= (level))	\
-		&& (dbghdrclass(level, DBGC_CLASS, __location__, __FUNC__ )) \
-		&& (dbgtext("%s: ", __FUNC__))				\
-		&& (dbgtext body) )
-#endif
 
 /* Prefix messages with the function name - class specific */
 #define DBGC_PREFIX(dbgc_class, level, body ) \

@@ -165,7 +165,6 @@ NTSTATUS ntlmssp_handle_neg_flags(struct ntlmssp_state *ntlmssp_state,
 	if (missing_flags != 0) {
 		HRESULT hres = HRES_SEC_E_UNSUPPORTED_FUNCTION;
 		NTSTATUS status = NT_STATUS(HRES_ERROR_V(hres));
-#ifndef __REACTOS__
 		DEBUG(1, ("%s: Got %s flags[0x%08x] "
 			  "- possible downgrade detected! "
 			  "missing_flags[0x%08x] - %s\n",
@@ -173,15 +172,6 @@ NTSTATUS ntlmssp_handle_neg_flags(struct ntlmssp_state *ntlmssp_state,
 			  (unsigned)flags,
 			  (unsigned)missing_flags,
 			  nt_errstr(status)));
-#else
-		DEBUG(1, ("%s: Got %s flags[0x%08x] "
-			  "- possible downgrade detected! "
-			  "missing_flags[0x%08x] - %s\n",
-			  __FUNC__, name,
-			  (unsigned)flags,
-			  (unsigned)missing_flags,
-			  nt_errstr(status)));
-#endif
 #ifndef __REACTOS__
 		debug_ntlmssp_flags_raw(1, missing_flags);
 		DEBUGADD(4, ("neg_flags[0x%08x]\n",

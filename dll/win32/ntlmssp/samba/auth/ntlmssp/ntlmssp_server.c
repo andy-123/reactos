@@ -670,7 +670,6 @@ static NTSTATUS ntlmssp_server_preauth(struct gensec_security *gensec_security,
 			cp = ndr_ntlmssp_find_av(&v2_resp.Challenge.AvPairs,
 						 sp->AvId);
 			if (cp == NULL) {
-                #ifndef __REACTOS__
 				DEBUG(1,("%s: AvId 0x%x missing for"
 					 "user=[%s] domain=[%s] "
 					 "workstation=[%s]\n",
@@ -679,16 +678,6 @@ static NTSTATUS ntlmssp_server_preauth(struct gensec_security *gensec_security,
 					 ntlmssp_state->user,
 					 ntlmssp_state->domain,
 					 ntlmssp_state->client.netbios_name));
-                #else
-				DEBUG(1,("%s: AvId 0x%x missing for"
-					 "user=[%s] domain=[%s] "
-					 "workstation=[%s]\n",
-					 __FUNC__,
-					 (unsigned)sp->AvId,
-					 ntlmssp_state->user,
-					 ntlmssp_state->domain,
-					 ntlmssp_state->client.netbios_name));
-                #endif
 				return NT_STATUS_INVALID_PARAMETER;
 			}
 
@@ -741,7 +730,6 @@ static NTSTATUS ntlmssp_server_preauth(struct gensec_security *gensec_security,
 					nttime_to_timeval(&st,
 							  sp->Value.AvTimestamp);
 
-                    #ifndef __REACTOS__
 					DEBUG(1,("%s: invalid AvTimestamp "
 						 "got[%s] expect[%s] for "
 						 "user=[%s] domain=[%s] "
@@ -754,20 +742,6 @@ static NTSTATUS ntlmssp_server_preauth(struct gensec_security *gensec_security,
 						 ntlmssp_state->user,
 						 ntlmssp_state->domain,
 						 ntlmssp_state->client.netbios_name));
-                    #else
-					DEBUG(1,("%s: invalid AvTimestamp "
-						 "got[%s] expect[%s] for "
-						 "user=[%s] domain=[%s] "
-						 "workstation=[%s]\n",
-						 __FUNC__,
-						 timeval_str_buf(&ct, false,
-								 true, &tmp1),
-						 timeval_str_buf(&st, false,
-								 true, &tmp2),
-						 ntlmssp_state->user,
-						 ntlmssp_state->domain,
-						 ntlmssp_state->client.netbios_name));
-                    #endif
 					return NT_STATUS_INVALID_PARAMETER;
 				}
 				break;

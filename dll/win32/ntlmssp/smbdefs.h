@@ -30,12 +30,9 @@
 typedef int bool;
 #endif
 
-/* todo __FUNC__ is obsolete ... remove it !*/
 #ifdef _MSC_VER
-#define __FUNC__ __FUNCTION__
+/* MSVC has no __func__ macro !*/
 #define __func__ __FUNCTION__
-#else
-#define __FUNC__ __func__
 #endif
 
 /* defined in stdlib.h ... needs some other defines like _USE_GNU and someting else .. */
