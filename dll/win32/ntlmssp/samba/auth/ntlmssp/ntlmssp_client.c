@@ -45,6 +45,7 @@ struct auth_session_info;
 #include "protocol.h"
 #include "samba/auth/credentials/credentials.h"
 #include "samba/libcli/auth/proto.h"
+#include "samba/lib/crypto/gnutls_helpers.h"
 #include "samba/lib/util/genrand.h"
 #include "samba/lib/util/samba_util.h"
 #endif

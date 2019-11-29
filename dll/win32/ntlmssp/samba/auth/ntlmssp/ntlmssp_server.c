@@ -42,6 +42,7 @@
 #include <gnutls/crypto.h>
 #else
 #include "smbincludes.h"
+#include "samba/lib/crypto/gnutls_helpers.h"
 #include "samba/lib/util/samba_util.h"
 #include "samba/lib/util/tevent_ntstatus.h"
 #include "samba/lib/util/time_basic.h"

@@ -34,6 +34,7 @@
 #else
 #include "smbincludes.h"
 #include "samba/lib/util/talloc_stack.h"
+#include "samba/lib/crypto/gnutls_helpers.h"
 #include "samba/auth/credentials/credentials.h"
 #include "samba/auth/credentials/credentials_internal.h"
 #include "samba/libcli/auth/proto.h"

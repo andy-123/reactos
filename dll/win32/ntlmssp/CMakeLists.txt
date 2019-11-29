@@ -38,6 +38,7 @@ list(APPEND SOURCE
     samba/librpc/gen_ndr/ndr_ntlmssp.c
     samba/librpc/gen_ndr/ndr_security.c
     samba/lib/crypto/arcfour.c
+    samba/lib/crypto/gnutls_error.c
     samba/lib/talloc/talloc.c
     samba/lib/tevent/tevent.c
     samba/lib/tevent/tevent_debug.c

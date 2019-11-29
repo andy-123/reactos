@@ -96,11 +96,43 @@ const char *nt_errstr_const(NTSTATUS nt_code)
     return "TODO nt_errstr_const";
 }
 
-NTSTATUS gnutls_error_to_ntstatus(
-    IN int returncode,
-    IN ULONG error)
+char *gnutls_strerror_name(
+    IN int gnutls_rc)
 {
-    return error;
+    switch (gnutls_rc)
+    {
+        case GNUTLS_E_SUCCESS:
+            return "GNUTLS_E_SUCCESS";
+        case GNUTLS_E_UNWANTED_ALGORITHM:
+            return "GNUTLS_E_UNWANTED_ALGORITHM";
+        case GNUTLS_E_MEMORY_ERROR:
+            return "GNUTLS_E_MEMORY_ERROR";
+        case GNUTLS_E_INVALID_REQUEST:
+            return "GNUTLS_E_MEMORY_ERROR";
+        case GNUTLS_E_DECRYPTION_FAILED:
+            return "GNUTLS_E_DECRYPTION_FAILED";
+        case GNUTLS_E_ENCRYPTION_FAILED:
+            return "GNUTLS_E_ENCRYPTION_FAILED";
+        case GNUTLS_E_SHORT_MEMORY_BUFFER:
+            return "GNUTLS_E_SHORT_MEMORY_BUFFER";
+        case GNUTLS_E_BASE64_DECODING_ERROR:
+            return "GNUTLS_E_BASE64_DECODING_ERROR";
+        case GNUTLS_E_HASH_FAILED:
+            return "GNUTLS_E_HASH_FAILED";
+        case GNUTLS_E_LIB_IN_ERROR_STATE:
+            return "GNUTLS_E_LIB_IN_ERROR_STATE";
+        case GNUTLS_E_INTERNAL_ERROR:
+            return "GNUTLS_E_INTERNAL_ERROR";
+    }
+    return "unknown gnutls error";
+}
+
+/* internal */
+NTSTATUS gnutls_ntstatus_to_error(
+    IN int gnutls_rc,
+    IN NTSTATUS blocked_status)
+{
+    return -1;
 }
 
 int gnutls_hash_init(
@@ -112,10 +144,10 @@ int gnutls_hash_init(
         *dig = talloc(NULL, _gnutls_hash_hd_t);
         (*dig)->algo = algorithm;
         MD5Init(&(*dig)->ctx);
-        return 0;
+        return GNUTLS_E_SUCCESS;
     }
     ERR("gnutls_hash_init: unknown algo!\n");
-    return -1;
+    return GNUTLS_E_UNWANTED_ALGORITHM;
 }
 
 int gnutls_hash(
@@ -126,10 +158,10 @@ int gnutls_hash(
     if (handle->algo == GNUTLS_DIG_MD5)
     {
         MD5Update(&handle->ctx, text, textlen);
-        return 0;
+        return GNUTLS_E_SUCCESS;
     }
     ERR("gnutls_hash: unknown algo!\n");
-    return -1;
+    return GNUTLS_E_UNWANTED_ALGORITHM;
 }
 
 void gnutls_hash_deinit(
@@ -166,10 +198,10 @@ int gnutls_hash_fast(
         MD5Update(&md5ctx, text, textlen);
         MD5Final(&md5ctx);
         memcpy(digest, md5ctx.digest, MD5_DIGEST_LENGTH);
-        return 0;
+        return GNUTLS_E_SUCCESS;
     }
     ERR("gnutls_hash_fast: unknown algo!\n");
-    return -1;
+    return GNUTLS_E_UNWANTED_ALGORITHM;
 }
 
 int gnutls_cipher_init(
@@ -183,15 +215,17 @@ int gnutls_cipher_init(
         if (key->size != 16)
         {
             ERR("gnutls_cipher_init: expected key-size 16, got size %i\n", key->size);
-            return -1;
+            return GNUTLS_E_INVALID_REQUEST;
         }
         *handle = talloc(NULL, _gnutls_cipher_hd_t);
+        if (!(*handle))
+            return GNUTLS_E_MEMORY_ERROR;
         (*handle)->cipher = cipher;
         (*handle)->key = key;
-        return 0;
+        return GNUTLS_E_SUCCESS;
     }
     ERR("gnutls_cipher_init: unknown algo!\n");
-    return -1;
+    return GNUTLS_E_UNWANTED_ALGORITHM;
 }
 
 int gnutls_cipher_encrypt(
@@ -202,10 +236,10 @@ int gnutls_cipher_encrypt(
     if (handle->cipher == GNUTLS_CIPHER_ARCFOUR_128)
     {
         arcfour_crypt(text, handle->key->data, textlen);
-        return 0;
+        return GNUTLS_E_SUCCESS;
     }
     ERR("gnutls_cipher_encrypt: unknown algo!\n");
-    return -1;
+    return GNUTLS_E_UNWANTED_ALGORITHM;
 }
 
 void gnutls_cipher_deinit(
@@ -231,10 +265,10 @@ int gnutls_hmac_fast(
     if (algorithm == GNUTLS_MAC_MD5)
     {
         HMAC_MD5(key, keylen, text, textlen, digest);
-        return 0;
+        return GNUTLS_E_SUCCESS;
     }
     ERR("gnutls_hmac_fast: unknown algo!\n");
-    return -1;
+    return GNUTLS_E_UNWANTED_ALGORITHM;
 }
 
 int gnutls_hmac_init(
@@ -246,12 +280,14 @@ int gnutls_hmac_init(
     if (algorithm == GNUTLS_MAC_MD5)
     {
         *dig = talloc(NULL, _gnutls_hmac_hd_t);
+        if (!(*dig))
+            return GNUTLS_E_MEMORY_ERROR;
         (*dig)->algo = algorithm;
         HMACMD5Init(&(*dig)->md5ctx, key, keylen);
-        return 0;
+        return GNUTLS_E_SUCCESS;
     }
     ERR("gnutls_hmac_init: unknown algo!\n");
-    return -1;
+    return GNUTLS_E_UNWANTED_ALGORITHM;
 }
 
 void gnutls_hmac_deinit(
@@ -278,10 +314,10 @@ int gnutls_hmac(
     if (handle->algo == GNUTLS_MAC_MD5)
     {
         HMACMD5Update(&handle->md5ctx, text, textlen);
-        return 0;
+        return GNUTLS_E_SUCCESS;
     }
     ERR("gnutls_hmac: unknown algo!\n");
-    return -1;
+    return GNUTLS_E_UNWANTED_ALGORITHM;
 }
 
 

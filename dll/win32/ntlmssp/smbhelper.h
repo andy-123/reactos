@@ -118,6 +118,10 @@ bin/default/include/public/core/ntstatus_gen.h:#define NT_STATUS_INVALID_PARAMET
 #define NT_STATUS_BUFFER_TOO_SMALL STATUS_BUFFER_TOO_SMALL
 #define NT_STATUS_ARRAY_BOUNDS_EXCEEDED STATUS_ARRAY_BOUNDS_EXCEEDED
 #define NT_STATUS_PORT_MESSAGE_TOO_LONG STATUS_PORT_MESSAGE_TOO_LONG
+#define NT_STATUS_INVALID_VARIANT STATUS_INVALID_VARIANT
+#define NT_STATUS_DECRYPTION_FAILED STATUS_DECRYPTION_FAILED
+#define NT_STATUS_ENCRYPTION_FAILED STATUS_ENCRYPTION_FAILED
+
 
 /*libcli/util/hresult.h*/
 #define HRES_ERROR(x) (x)
@@ -255,9 +259,20 @@ typedef struct
 } _gnutls_hmac_hd_t, *gnutls_hmac_hd_t;
 
 /* gnutls */
-NTSTATUS gnutls_error_to_ntstatus(
-    IN int returncode,
-    IN ULONG error);
+#define GNUTLS_E_SUCCESS 0
+#define GNUTLS_E_UNWANTED_ALGORITHM -1
+#define GNUTLS_E_MEMORY_ERROR -2
+#define GNUTLS_E_INVALID_REQUEST -3
+#define GNUTLS_E_DECRYPTION_FAILED -4
+#define GNUTLS_E_ENCRYPTION_FAILED -5
+#define GNUTLS_E_SHORT_MEMORY_BUFFER -6
+#define GNUTLS_E_BASE64_DECODING_ERROR -7
+#define GNUTLS_E_HASH_FAILED -8
+#define GNUTLS_E_LIB_IN_ERROR_STATE -9
+#define GNUTLS_E_INTERNAL_ERROR -10
+
+char *gnutls_strerror_name(
+    IN int gnutls_rc);
 
 int gnutls_cipher_init(
     IN gnutls_cipher_hd_t * handle,

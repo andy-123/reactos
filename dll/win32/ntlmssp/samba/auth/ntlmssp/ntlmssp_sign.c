@@ -31,6 +31,7 @@
 #else
 #include "smbdefs.h"
 #include "smbincludes.h"
+#include "samba/lib/crypto/gnutls_helpers.h"
 #include "samba/lib/util/data_blob.h"
 #include "samba/lib/util/samba_util.h"
 #include "zlib/zlib.h"
