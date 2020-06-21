@@ -5,6 +5,7 @@ list(APPEND SOURCE
     lsa.c
     msv1_0.c
     precomp.h
+    sam.c
     ${CMAKE_CURRENT_BINARY_DIR}/msv1_0_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msv1_0.def)
 

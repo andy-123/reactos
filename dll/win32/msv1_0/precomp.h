@@ -31,6 +31,7 @@
 
 #include "lsa.h"
 #include "msv1_0.h"
+#include "sam.h"
 
 #include <wine/debug.h>
 
