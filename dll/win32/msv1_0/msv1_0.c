@@ -13,11 +13,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msv1_0);
 
 
-/* GLOBALS *****************************************************************/
-
-LSA_DISPATCH_TABLE DispatchTable;
-
-
 /* FUNCTIONS ***************************************************************/
 
 static
@@ -169,6 +164,108 @@ done:
     return Status;
 }
 
+
+static
+NTSTATUS
+BuildLm20LogonProfileBuffer(
+    _In_ PLSA_CLIENT_REQUEST ClientRequest,
+    _In_ PSAMPR_USER_INFO_BUFFER UserInfo,
+    _In_ PLSA_SAM_PWD_DATA LogonPwdData,
+    _Out_ PMSV1_0_LM20_LOGON_PROFILE *ProfileBuffer,
+    _Out_ PULONG ProfileBufferLength)
+{
+    PMSV1_0_LM20_LOGON_PROFILE LocalBuffer;
+    NTLM_CLIENT_BUFFER Buffer;
+    PBYTE PtrOffset;
+    ULONG BufferLength;
+    NTSTATUS Status = STATUS_SUCCESS;
+    UNICODE_STRING ComputerNameUCS;
+
+    *ProfileBuffer = NULL;
+    *ProfileBufferLength = 0;
+
+    if (!NtlmUStrAlloc(&ComputerNameUCS,
+                       LogonPwdData->ComputerName->Length + sizeof(WCHAR) * 3, 0))
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+    Status = RtlAppendUnicodeToString(&ComputerNameUCS, L"\\\\");
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("RtlAppendUnicodeToString failed 0x%lx\n", Status);
+        goto done;
+    }
+    Status = RtlAppendUnicodeStringToString(&ComputerNameUCS, LogonPwdData->ComputerName);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("RtlAppendUnicodeStringToString failed 0x%lx\n", Status);
+        goto done;
+    }
+
+    BufferLength = sizeof(MSV1_0_LM20_LOGON_PROFILE) +
+                   ComputerNameUCS.Length + sizeof(WCHAR);
+
+    Status = NtlmAllocateClientBuffer(ClientRequest,
+                                      BufferLength,
+                                      &Buffer);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("DispatchTable.AllocateClientBuffer failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    TRACE("ClientBaseAddress: %p\n", Buffer.ClientBaseAddress);
+
+    LocalBuffer = (PMSV1_0_LM20_LOGON_PROFILE)Buffer.LocalBuffer;
+    PtrOffset = (PBYTE)(LocalBuffer + 1);
+
+    LocalBuffer->MessageType = MsV1_0Lm20LogonProfile;
+
+    LocalBuffer->KickOffTime.LowPart = UserInfo->All.AccountExpires.LowPart;
+    LocalBuffer->KickOffTime.HighPart = UserInfo->All.AccountExpires.HighPart;
+
+    LocalBuffer->LogoffTime.LowPart = UserInfo->All.AccountExpires.LowPart;
+    LocalBuffer->LogoffTime.HighPart = UserInfo->All.AccountExpires.HighPart;
+
+    memcpy(LocalBuffer->UserSessionKey, &LogonPwdData->UserSessionKey, MSV1_0_USER_SESSION_KEY_LENGTH);
+
+    //FIXME: Set Domainname if we domain joined
+    //       what to do if not? WORKGROUP
+    RtlInitUnicodeString(&LocalBuffer->LogonDomainName, NULL);
+
+    memcpy(LocalBuffer->LanmanSessionKey, &LogonPwdData->LanmanSessionKey, MSV1_0_LANMAN_SESSION_KEY_LENGTH);
+
+    if (!NtlmUStrWriteToStruct(LocalBuffer, BufferLength, &LocalBuffer->LogonServer,
+                               &ComputerNameUCS, &PtrOffset, TRUE))
+    {
+        ERR("NtlmStructWriteUCS failed.\n");
+        Status = ERROR_INTERNAL_ERROR;
+        goto done;
+    }
+    /* not supported */
+    RtlInitUnicodeString(&LocalBuffer->UserParameters, NULL);
+    /* Build user flags */
+    LocalBuffer->UserFlags = 0x0;
+    if (LogonPwdData->LogonType == NetLogonLmKey)
+        LocalBuffer->UserFlags |= LOGON_USED_LM_PASSWORD;
+
+    /* copy data to client buffer */
+    Status = NtlmCopyToClientBuffer(ClientRequest, BufferLength, &Buffer);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("DispatchTable.CopyToClientBuffer failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    *ProfileBuffer = (PMSV1_0_LM20_LOGON_PROFILE)Buffer.ClientBaseAddress;
+    *ProfileBufferLength = BufferLength;
+done:
+    /* On success Buffer.ClientBaseAddress will not be free */
+    NtlmFreeClientBuffer(ClientRequest, !NT_SUCCESS(Status), &Buffer);
+    NtlmUStrFree(&ComputerNameUCS);
+    return Status;
+}
 
 static
 PSID
@@ -925,7 +1022,71 @@ LsaApLogonUserEx2_Network(
     _Out_ PULONG LogonProfileSize,
     _Out_ PNTSTATUS SubStatus)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PMSV1_0_LM20_LOGON LogonInfo;
+    ULONG_PTR PtrOffset;
+
+    *LogonProfile = NULL;
+    *LogonProfileSize = 0;
+    *UserInfoPtr = NULL;
+    *AccountDomainSidPtr = NULL;
+    *SpecialAccount = FALSE;
+    LogonInfo = (PMSV1_0_LM20_LOGON)ProtocolSubmitBuffer;
+
+    if (SubmitBufferSize < sizeof(MSV1_0_LM20_LOGON))
+    {
+        ERR("Invalid SubmitBufferSize %lu\n", SubmitBufferSize);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Fix-up pointers in the authentication info */
+    PtrOffset = (ULONG_PTR)ProtocolSubmitBuffer - (ULONG_PTR)ClientBufferBase;
+
+    if ((!NtlmFixupAndValidateUStr(&LogonInfo->LogonDomainName, PtrOffset)) ||
+        (!NtlmFixupAndValidateUStr(&LogonInfo->UserName, PtrOffset)) ||
+        (!NtlmFixupAndValidateUStr(&LogonInfo->Workstation, PtrOffset)) ||
+        (!NtlmFixupAStr(&LogonInfo->CaseSensitiveChallengeResponse, PtrOffset)) ||
+        (!NtlmFixupAStr(&LogonInfo->CaseInsensitiveChallengeResponse, PtrOffset)))
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto done;
+    }
+
+    LogonPwdData->IsNetwork = TRUE;
+    LogonPwdData->LogonInfo = LogonInfo;
+    LogonPwdData->ComputerName = ComputerName;
+    Status = SamValidateUser(
+            Network,
+            &LogonInfo->UserName,
+            &LogonInfo->LogonDomainName,
+            LogonPwdData,
+            ComputerName,
+            SpecialAccount,
+            AccountDomainSidPtr,
+            UserHandlePtr,
+            UserInfoPtr,
+            SubStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamValidateUser failed with 0x%lx\n", Status);
+        goto done;
+    }
+
+    if (LogonInfo->ParameterControl & MSV1_0_RETURN_PROFILE_PATH)
+    {
+        Status = BuildLm20LogonProfileBuffer(ClientRequest, *UserInfoPtr,
+            LogonPwdData, LogonProfile, LogonProfileSize);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("BuildLm20LogonProfileBuffer failed with 0x%lx\n", Status);
+            goto done;
+        }
+    }
+
+    *LogonUserRef = &LogonInfo->UserName;
+    *LogonDomainRef = &LogonInfo->LogonDomainName;
+done:
+    return Status;
 }
 
 /*
